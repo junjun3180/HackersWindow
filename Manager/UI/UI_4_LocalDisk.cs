@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,15 +22,31 @@ public class UI_4_LocalDisk : MonoBehaviour
     // 신규 
     [Header("UI References")]
     public RectTransform content;       // 트리 UI의 Content 그룹
+    public RectTransform linePrefab;    // 선으로 사용할 프리팹
+
+
+    [Header("Base Folder Prefab")]
     public GameObject FoldPrefab;       // 노말 폴더 노드 프리팹
+    public GameObject FoldHiddenPrefab;       // 노말 폴더 노드 프리팹
+    public GameObject BossPrefab;       // 보스 폴더 노드 프리팹
+
+    [Header("Shop, Download Prefab")]
     public GameObject DownloadPrefab;   // 다운로드 폴더 노드 프리팹
     public GameObject ShopPrefab;       // 상점 폴더 노드 프리팹
-    public GameObject BossPrefab;       // 보스 폴더 노드 프리팹
-    public RectTransform linePrefab;    // 선으로 사용할 프리팹
-    public float xOffset = 200f;        // X축 간격
-    public float yOffset = 100f;        // Y축 간격
 
-    private Dictionary<int, int> depthNodeCount; // 각 Depth의 노드 개수를 저장
+    [Header("Random Special Prefab")]
+    public GameObject ChargeRoomPrefab; // 상점 폴더 노드 프리팹
+    public GameObject GuardRoomPrefab;  // 상점 폴더 노드 프리팹
+    public GameObject JuvaCafePrefab;   // 상점 폴더 노드 프리팹
+    public GameObject TrashRoomPrefab;  // 상점 폴더 노드 프리팹
+
+
+    public float ySpacing = 100f; // Y축 간격
+    public float xSpacing = 200f; // X축 간격
+
+    private Dictionary<int, List<FolderNode>> depthNodes;   // Depth별 노드 저장
+    private Dictionary<int, RectTransform> nodeUIMap;       // 노드 ID와 UI RectTransform 매핑
+    private Dictionary<int, List<GameObject>> linesMap;     // 각 노드에 연결된 선을 저장
 
     public static UI_4_LocalDisk Instance
     {
@@ -77,9 +94,11 @@ public class UI_4_LocalDisk : MonoBehaviour
 
     public void OpenUI()
     {
+        Debug.Log("OpenUI");
         if (UI_W_LocalDisk != null)
         {
             UI_W_LocalDisk.SetActive(true);
+            UpdateNodeUIStates();
             // Debug.Log("OpenUI : UI_4_LocalDisk");
         }
     }
@@ -93,11 +112,11 @@ public class UI_4_LocalDisk : MonoBehaviour
         }
     }
 
-    public void GenerateTreeUI(List<FolderGenerator.TreeNodeData> nodes)
+    public void GenerateTreeUI(FolderNode rootFolder)
     {
-        if (nodes == null || nodes.Count == 0)
+        if (rootFolder == null)
         {
-            Debug.LogError("No nodes available for generating the UI.");
+            Debug.LogError("Root folder is null. Cannot generate UI.");
             return;
         }
 
@@ -107,119 +126,204 @@ public class UI_4_LocalDisk : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        // Depth별 노드 개수 계산
-        CalculateDepthNodeCount(nodes);
+        // 초기화
+        depthNodes = new Dictionary<int, List<FolderNode>>();
+        nodeUIMap = new Dictionary<int, RectTransform>();
+        linesMap = new Dictionary<int, List<GameObject>>();
 
-        // 루트 노드부터 시작
-        var rootNode = nodes.Find(node => node.ParentId == null);
-        if (rootNode == null)
-        {
-            Debug.LogError("Root node not found.");
-            return;
-        }
+        // Depth별로 노드 수집 (깊이 우선 탐색)
+        CollectNodesByDepth(rootFolder, 0);
 
-        // 재귀적으로 UI 생성 시작
-        GenerateNodeUI(rootNode, nodes, null, 0, 0);
+        // Depth별 노드 UI 생성
+        GenerateUIFromDepthNodes();
     }
 
-    // Depth별 노드 개수를 계산하는 함수
-    private void CalculateDepthNodeCount(List<FolderGenerator.TreeNodeData> nodes)
+    private void CollectNodesByDepth(FolderNode node, int depth)
     {
-        depthNodeCount = new Dictionary<int, int>();
-
-        foreach (var node in nodes)
+        if (!depthNodes.ContainsKey(depth))
         {
-            if (!depthNodeCount.ContainsKey(node.Depth))
-            {
-                depthNodeCount[node.Depth] = 0;
-            }
-            depthNodeCount[node.Depth]++;
-        }
-    }
-
-    private void GenerateNodeUI(FolderGenerator.TreeNodeData node, List<FolderGenerator.TreeNodeData> nodes,
-                                RectTransform parentUI, int depth, int siblingIndex)
-    {
-        // 현재 노드 UI 생성
-        GameObject newNodeUI;
-
-        // 노드 타입에 따라 프리팹 설정
-        switch (node.Type)
-        {
-            case FolderNode.FolderType.Download:
-                newNodeUI = Instantiate(DownloadPrefab, content);
-                break;
-            case FolderNode.FolderType.Shop:
-                newNodeUI = Instantiate(ShopPrefab, content);
-                break;
-            case FolderNode.FolderType.Boss:
-                newNodeUI = Instantiate(BossPrefab, content);
-                break;
-            default:
-                newNodeUI = Instantiate(FoldPrefab, content);
-                break;
+            depthNodes[depth] = new List<FolderNode>();
         }
 
-        RectTransform rectTransform = newNodeUI.GetComponent<RectTransform>();
-        rectTransform.name = $"Node_{node.Id}";
-
-        // X축 위치 계산
-        float xPos = depth * xOffset;
-
-        // Y축 위치 계산: Depth의 노드 개수에 따라 중앙에서 균등 분산
-        int totalNodesAtDepth = depthNodeCount[depth];
-        float ySpacing = yOffset; // 노드 간 간격
-        float yStart = -(totalNodesAtDepth - 1) * ySpacing / 2; // 중앙 기준 시작점
-
-        float yPos = yStart + siblingIndex * ySpacing;
-
-        rectTransform.anchoredPosition = new Vector2(xPos, yPos);
-
-        // 노드 정보 설정
-        Text nodeText = newNodeUI.GetComponentInChildren<Text>();
-        if (nodeText != null)
-        {
-            nodeText.text = $"ID: {node.Id}";
-        }
-
-        // 부모와 자식 사이에 선 그리기
-        if (parentUI != null)
-        {
-            DrawLine(parentUI, rectTransform);
-        }
+        // 현재 Depth에 노드 추가
+        depthNodes[depth].Add(node);
 
         // 자식 노드 순회
-        int childIndex = 0;
-        foreach (var childId in node.Children)
+        foreach (var child in node.Children)
         {
-            var childNode = nodes.Find(n => n.Id == childId);
-            if (childNode != null)
+            CollectNodesByDepth(child, depth + 1);
+        }
+    }
+
+    private void GenerateUIFromDepthNodes()
+    {
+        foreach (var depth in depthNodes.Keys)
+        {
+            List<FolderNode> currentDepthNodes = depthNodes[depth];
+
+            // Y축 위치를 균등하게 배치하기 위한 시작점
+            float yStart = (currentDepthNodes.Count - 1) * ySpacing / 2;
+
+            for (int i = 0; i < currentDepthNodes.Count; i++)
             {
-                GenerateNodeUI(childNode, nodes, rectTransform, depth + 1, childIndex);
-                childIndex++;
+                var node = currentDepthNodes[i];
+
+                // 현재 노드 UI 생성
+                GameObject newNodeUI;
+
+                // 노드 타입에 따라 프리팹 설정
+                switch (node.Type)
+                {
+                    case FolderNode.FolderType.Download:
+                        newNodeUI = Instantiate(DownloadPrefab, content);
+                        break;
+                    case FolderNode.FolderType.Shop:
+                        newNodeUI = Instantiate(ShopPrefab, content);
+                        break;
+                    case FolderNode.FolderType.Boss:
+                        newNodeUI = Instantiate(BossPrefab, content);
+                        break;
+                    case FolderNode.FolderType.RandomSpecial:
+                        string name = node.CurrentFolder.name;
+                        if (name == "Charge_room(Clone)")
+                            newNodeUI = Instantiate(ChargeRoomPrefab, content);
+                        else if (name == "Guard_room(Clone)")
+                            newNodeUI = Instantiate(GuardRoomPrefab, content);
+                        else if (name == "Juva_cafe(Clone)")
+                            newNodeUI = Instantiate(JuvaCafePrefab, content);
+                        else if (name == "Trash_room(Clone)")
+                            newNodeUI = Instantiate(TrashRoomPrefab, content);
+                        else
+                        {
+                            Debug.LogError("Could not found Room Type");
+                            return;
+                        }
+                        break;
+                    default:
+                        newNodeUI = Instantiate(FoldPrefab, content);
+                        break;
+                }
+
+                RectTransform rectTransform = newNodeUI.GetComponent<RectTransform>();
+                rectTransform.name = $"Node_{node.FolderName}";
+
+                // X축 위치: Depth에 따라 오른쪽으로 이동
+                float xPos = depth * xSpacing;
+
+                // Y축 위치: 중앙 기준으로 위아래로 균등하게 분산
+                float yPos = yStart - i * ySpacing;
+
+                rectTransform.anchoredPosition = new Vector2(xPos, yPos);
+
+                // 노드 정보 설정
+                Text nodeText = newNodeUI.GetComponentInChildren<Text>();
+                if (nodeText != null)
+                {
+                    nodeText.text = node.FolderName;
+                }
+
+                // 노드 UI 저장
+                nodeUIMap[node.GetInstanceID()] = rectTransform;
+
+                // 부모와 연결되는 선 그리기
+                if (node.Parent != null && nodeUIMap.ContainsKey(node.Parent.GetInstanceID()))
+                {
+                    RectTransform parentUI = nodeUIMap[node.Parent.GetInstanceID()];
+                    DrawLine(node.Parent, node, parentUI, rectTransform);
+                }
             }
         }
     }
-    private void DrawLine(RectTransform startNode, RectTransform endNode)
+
+    private void DrawLine(FolderNode startNode, FolderNode endNode, RectTransform startNodeUI, RectTransform endNodeUI)
     {
-        // 선 프리팹 생성
+        // 라인을 생성 후 그룹 최상단에 위치시킴.
         RectTransform line = Instantiate(linePrefab, content);
+        line.transform.SetSiblingIndex(0);
         line.name = "Line";
 
-        Vector2 startPosition = startNode.anchoredPosition;
-        Vector2 endPosition = endNode.anchoredPosition;
+        Vector2 startPosition = startNodeUI.anchoredPosition;
+        Vector2 endPosition = endNodeUI.anchoredPosition;
 
-        // 선 길이와 각도 설정
         float distance = Vector2.Distance(startPosition, endPosition);
         float angle = Mathf.Atan2(endPosition.y - startPosition.y, endPosition.x - startPosition.x) * Mathf.Rad2Deg;
 
         line.sizeDelta = new Vector2(distance, 2f); // 선 두께
         line.anchoredPosition = (startPosition + endPosition) / 2; // 선의 중심
         line.localRotation = Quaternion.Euler(0, 0, angle); // 선 회전
+        line.gameObject.SetActive(false);
+
+        // 선을 linesMap에 저장
+        int startNodeID = startNode.GetInstanceID();
+        int endNodeID = endNode.GetInstanceID();
+
+        if (!linesMap.ContainsKey(startNodeID))
+        {
+            linesMap[startNodeID] = new List<GameObject>();
+        }
+        linesMap[startNodeID].Add(line.gameObject);
+
+        if (!linesMap.ContainsKey(endNodeID))
+        {
+            linesMap[endNodeID] = new List<GameObject>();
+        }
+        linesMap[endNodeID].Add(line.gameObject);
     }
 
+    public void UpdateNodeUIStates()
+    {
+        Debug.Log("UpdateNodeUIStates");
+        foreach (var nodePair in nodeUIMap)
+        {
+            int nodeID = nodePair.Key;
+            RectTransform nodeUI = nodePair.Value;
 
+            // FolderNode를 가져오기 위해 ID를 기반으로 찾음
+            FolderNode node = depthNodes.Values
+                .SelectMany(list => list)
+                .FirstOrDefault(n => n.GetInstanceID() == nodeID);
 
+            if (node == null)
+            {
+                Debug.LogError($"Node with ID {nodeID} not found.");
+                continue;
+            }
+
+            GameObject nodeGameObject = nodeUI.gameObject; 
+            Image imageComponent = nodeGameObject.GetComponent<Image>();
+
+            if (imageComponent == null)
+            {
+                Debug.LogError("Image Component is not found");
+                return;
+            }
+
+            // 발견 O + 클리어 X : 색상을 어둡게 처리
+            if (node.isDetectionDone && !node.IsCleared)
+            {
+                nodeGameObject.SetActive(true);
+                imageComponent.color = new Color(0.3f, 0.3f, 0.3f, 0.6f);
+            }
+            // 발견 O + 클리어 O : 색상 원복, 선 활성화
+            else if (node.isDetectionDone && node.IsCleared)
+            {
+                imageComponent.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+                if (linesMap.ContainsKey(nodeID))
+                {
+                    foreach (GameObject line in linesMap[nodeID])
+                    {
+                        Debug.Log("Line SetActive2");
+                        line.SetActive(true);
+                    }
+                }
+            }
+            // 탐색되지 않은 경우 UI 비활성화
+            else if (!node.isDetectionDone)
+            {
+                nodeGameObject.SetActive(false);
+            }
+        }
+    }
 
 
     // 아래는 기존 동근이가 작성한 코드임

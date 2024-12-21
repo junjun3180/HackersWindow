@@ -69,7 +69,7 @@ public class FolderManager : MonoBehaviour
 
         if (localDiskUI != null && rootFolder != null)
         {
-            localDiskUI.GenerateTreeUI(FolderGenerator.TreeTemplete);
+            localDiskUI.GenerateTreeUI(FolderGenerator.GetRootNode());
         }
     }
 
@@ -105,6 +105,15 @@ public class FolderManager : MonoBehaviour
         // 클리어 여부와 몬스터 수를 확인 후 포탈을 활성화 
         CurrentFolder.CheckCurrentFolder(); 
         Debug.Log($"Current folder set to: {CurrentFolder.FolderName}");
+
+        // 현재 폴더를 발견 상태로 만듦.
+        CurrentFolder.isDetectionDone = true;
+
+        // 연결된 폴더도 모두 발견 상태로 만듦.
+        foreach (Portal portal in CurrentFolder.Portals)
+        {
+            portal.ConnectedFolder.isDetectionDone = true;
+        }
     }
 
     // 폴더 이동

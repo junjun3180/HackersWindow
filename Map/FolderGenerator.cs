@@ -225,7 +225,17 @@ public class FolderGenerator : MonoBehaviour
                 return EndFolderPrefabs[UnityEngine.Random.Range(0, EndFolderPrefabs.Count)];
 
             case FolderNode.FolderType.RandomSpecial:
-                return SpecialFolderPrefabs[UnityEngine.Random.Range(0, SpecialFolderPrefabs.Count)];
+                if (SpecialFolderPrefabs.Count == 0) // 리스트 비었을 경우 예외처리
+                {
+                    Debug.LogError("SpecialFolderPrefabs list is empty!");
+                    return null;
+                }
+
+                // 랜덤 선택 후 중복 방지를 위해 리스트에서 제거
+                int randomIndex = UnityEngine.Random.Range(0, SpecialFolderPrefabs.Count);
+                GameObject specialPrefab = SpecialFolderPrefabs[randomIndex];
+                SpecialFolderPrefabs.RemoveAt(randomIndex);
+                return specialPrefab;
 
             default:
                 return null;
@@ -237,69 +247,6 @@ public class FolderGenerator : MonoBehaviour
     {
         if (node == null) return;
 
-        // 기존 코드
-        /*
-        // 연결된 포탈 리스트 초기화
-        int rightPortalIndex = 0;
-
-        // 왼쪽 포탈 설정 (부모 노드로 이동)
-        if (node.Parent != null)
-        {
-            Portal leftPortal = node.Left_Portal;
-            if (leftPortal == null)
-            {
-                // 왼쪽 포탈 생성
-                GameObject portalObject = new GameObject($"LeftPortal_{node.FolderName}");
-                portalObject.transform.SetParent(node.transform);
-                leftPortal = portalObject.AddComponent<Portal>();
-                node.Left_Portal = leftPortal;
-            }
-
-            leftPortal.Direction = Portal.PortalDirection.Left;
-            leftPortal.PortalIndex = 0;
-            leftPortal.ConnectedFolder = node.Parent;
-        }
-
-        // 오른쪽 포탈 설정 (자식 노드로 이동)
-        foreach (FolderNode child in node.Children)
-        {
-            Portal rightPortal = null;
-
-            // 오른쪽 포탈 생성
-            if (rightPortalIndex < node.Portals.Length)
-            {
-                rightPortal = node.Portals[rightPortalIndex];
-            }
-            else
-            {
-                GameObject portalObject = new GameObject($"RightPortal_{node.FolderName}_{rightPortalIndex}");
-                portalObject.transform.SetParent(node.transform);
-                rightPortal = portalObject.AddComponent<Portal>();
-                Array.Resize(ref node.Portals, rightPortalIndex + 1);
-                node.Portals[rightPortalIndex] = rightPortal;
-            }
-
-            rightPortal.Direction = Portal.PortalDirection.Right;
-            rightPortal.PortalIndex = rightPortalIndex;
-            rightPortal.ConnectedFolder = child;
-
-            // 자식의 왼쪽 포탈 설정
-            if (child.Left_Portal == null)
-            {
-                GameObject portalObject = new GameObject($"LeftPortal_{child.FolderName}");
-                portalObject.transform.SetParent(child.transform);
-                Portal leftPortal = portalObject.AddComponent<Portal>();
-                child.Left_Portal = leftPortal;
-
-                leftPortal.Direction = Portal.PortalDirection.Left;
-                leftPortal.PortalIndex = rightPortalIndex;
-                leftPortal.ConnectedFolder = node;
-            }
-
-            rightPortalIndex++;
-        }
-        */
-        // 신규 코드
         if (node.Portals == null)
         {
             Debug.LogError($"Node {node.name} has null Portals");

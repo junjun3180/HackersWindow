@@ -8,6 +8,7 @@ public class FolderNode : MonoBehaviour
     public string FolderName; // 폴더 이름
     public FolderNode Parent; // 부모 폴더
     public List<FolderNode> Children; // 자식 폴더들 (최대 3개)
+    public bool isDetectionDone = false;
 
     public enum FolderType
     {
