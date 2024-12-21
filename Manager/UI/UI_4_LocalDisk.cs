@@ -312,7 +312,6 @@ public class UI_4_LocalDisk : MonoBehaviour
                 {
                     foreach (GameObject line in linesMap[nodeID])
                     {
-                        Debug.Log("Line SetActive2");
                         line.SetActive(true);
                     }
                 }

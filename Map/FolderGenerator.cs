@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using static Unity.VisualScripting.Metadata;
 
 public class FolderGenerator : MonoBehaviour
@@ -25,6 +26,16 @@ public class FolderGenerator : MonoBehaviour
 
     private List<FolderNode> spawnedFolders = new List<FolderNode>();
     private FolderNode rootFolder;
+
+    [Header("Portal Sprite")]
+    public Sprite bossPortalSprite;
+    public Sprite shopPortalSprite;
+    public Sprite downloadPortalSprite;
+    public Sprite Charge_room;
+    public Sprite Guard_room;
+    public Sprite Juva_cafe;
+    public Sprite Trash_room;
+    public Sprite Default;
 
     [Header("Spacing Settings")]
     public float HorizontalSpacing;
@@ -273,11 +284,31 @@ public class FolderGenerator : MonoBehaviour
                 continue;
             }
 
+            FolderNode childNode = node.Children[i];
+            Portal rightPortal = node.Portals[i];
+
             // 현재 맵 -> 자식 맵 포탈 이어주기
-            node.Portals[i].SetConnectedFolder(node.Children[i], 0);
+            rightPortal.SetConnectedFolder(childNode, 0);
+
+            // 기본 폴더를 제외한 폴더랑 연결된 포탈의 경우 애니메이터 비활성화
+            if(childNode.Type != FolderNode.FolderType.Middle || childNode.Type != FolderNode.FolderType.Start)
+            {
+                Animator animator = rightPortal.GetComponent<Animator>();
+                animator.enabled = false;
+            }
+
+            // 연결된 자식 폴더 타입에 따라 포탈 이미지 변경
+            Sprite portalSprite = GetPortalSpriteForFolderType(childNode);
+            if (portalSprite != null)
+            {
+                UpdatePortalImage(rightPortal, portalSprite);
+            }
+
 
             // 자식 맵 -> 현재 맵 포탈 이어주기
-            node.Children[i].Left_Portal.SetConnectedFolder(node, i);
+            Portal leftPortal = childNode.Left_Portal;
+            leftPortal.SetConnectedFolder(node, i);
+            // node.Children[i].Left_Portal.SetConnectedFolder(node, i);
         }
 
         // 재귀적으로 자식 노드의 포탈 연결
@@ -286,6 +317,65 @@ public class FolderGenerator : MonoBehaviour
             ConnectPortals(child);
         }
     }
+
+    private void UpdatePortalImage(Portal portal, Sprite newSprite)
+    {
+        if (portal == null)
+        {
+            Debug.LogError("Portal is null. Cannot update image.");
+            return;
+        }
+
+        SpriteRenderer portalImage = portal.GetComponent<SpriteRenderer>();
+        if (portalImage != null)
+        {
+            if (newSprite != null)
+            {
+                portalImage.sprite = newSprite;
+                Debug.Log($"Portal {portal.name} sprite updated to {newSprite.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"New sprite for Portal {portal.name} is null. No change applied.");
+            }
+        }
+        else
+        {
+            Debug.LogError($"Portal {portal.name} does not have a SpriteRenderer component!");
+        }
+    }
+
+    private Sprite GetPortalSpriteForFolderType(FolderNode node)
+    {
+        switch (node.Type)
+        {
+            case FolderNode.FolderType.Boss:
+                return bossPortalSprite;
+            case FolderNode.FolderType.Shop:
+                return shopPortalSprite;
+            case FolderNode.FolderType.Download:
+                return downloadPortalSprite;
+            case FolderNode.FolderType.RandomSpecial:
+                string name = node.name;
+                if (name == "Charge_room(Clone)")
+                    return Charge_room;
+                else if (name == "Guard_room(Clone)")
+                    return Guard_room;
+                else if (name == "Juva_cafe(Clone)")
+                    return Juva_cafe;
+                else if (name == "Trash_room(Clone)")
+                    return Trash_room;
+                else
+                {
+                    Debug.LogError($"Unknown Room Type: {name}");
+                    return null;
+                }
+            default:
+                Debug.Log($"Returning default sprite for folder type {node.Type}");
+                return Default; // 기본 포탈 이미지
+        }
+    }
+
 
 
     // 트리 구조체 정보를 담고있는 클래스
@@ -351,7 +441,7 @@ public class FolderGenerator : MonoBehaviour
                 if (parent.ChildCount >= 3) break; // 자식이 최대 개수를 초과하면 중단
 
                 // 자식 노드 생성
-                var child = new TreeNodeData(nextId++, parent.Id, FolderNode.FolderType.Middle , parent.Depth + 1);
+                var child = new TreeNodeData(nextId++, parent.Id, FolderNode.FolderType.Middle, parent.Depth + 1);
                 parent.Children.Add(child.Id);
                 parent.ChildCount++;
                 parent.IsLeaf = false; // 부모가 되었으므로 리프 노드가 아님

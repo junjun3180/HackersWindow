@@ -197,9 +197,23 @@ public class FolderManager : MonoBehaviour
         // 플레이어 위치 조정: 하위 폴더의 왼쪽 포탈 근처로 이동
         if (Player != null)
         {
-            Vector3 newPosition = CurrentFolder.Left_Portal.transform.position;
-            newPosition.x += 0.5f;
-            newPosition.y -= 0.5f;
+            Vector3 newPosition;
+
+            if (CurrentFolder.Type == FolderNode.FolderType.RandomSpecial 
+                || CurrentFolder.Type == FolderNode.FolderType.Download 
+                || CurrentFolder.Type == FolderNode.FolderType.Shop )
+            {
+                // 특수 방: Y축만 0.5 위로 조정
+                newPosition = CurrentFolder.Left_Portal.transform.position;
+                newPosition.y += 3.0f; // Y축 이동
+            }
+            else
+            {
+                // 일반 방: 기존 로직
+                newPosition = CurrentFolder.Left_Portal.transform.position;
+                newPosition.x += 0.5f; // X축 이동
+                newPosition.y -= 0.5f; // Y축 이동
+            }
             Player.transform.position = newPosition;
         }
 
