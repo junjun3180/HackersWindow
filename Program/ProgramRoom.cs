@@ -45,6 +45,7 @@ public class ProgramRoom : MonoBehaviour
             ui_8_ProgramInstall.FinishedInstall = false;
             ui_8_ProgramInstall.OpenUI();
             ui_8_ProgramInstall.UI_1_Info.text = ProgramList[ProgramID].Explanation;
+            ui_8_ProgramInstall.ProgramName.text = ProgramList[ProgramID].name;
         }
     }
 

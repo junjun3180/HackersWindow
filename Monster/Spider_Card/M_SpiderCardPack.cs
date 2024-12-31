@@ -18,6 +18,7 @@ public class M_SpiderCardPack : MonsterBase
         statusManager = StatusManager.Instance;
         SpriteRenderer = GetComponent<SpriteRenderer>();
         MAnimator = GetComponentInChildren<Animator>();
+        folderManager = FolderManager.Instance;
         StartCoroutine(MonsterRoutine());
     }
 

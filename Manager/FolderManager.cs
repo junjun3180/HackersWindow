@@ -15,6 +15,7 @@ public class FolderManager : MonoBehaviour
     public int CurrentFolderMonsterCount = 0;
     public FolderNode rootFolder;
 
+    public Portal PreviousPortal = null;
 
     private UI_0_HUD ui_0_HUD; // HUD를 갱신하기 위한 참조
     private UI_4_LocalDisk localDiskUI;
@@ -86,7 +87,7 @@ public class FolderManager : MonoBehaviour
         }
 
         CurrentFolder = rootFolder; // 루트 폴더를 현재 폴더로 설정
-        Debug.Log("Map generation completed.");
+        // Debug.Log("Map generation completed.");
     }
 
     // 현재 폴더 설정
@@ -99,19 +100,44 @@ public class FolderManager : MonoBehaviour
 
         // HUD 업데이트
         SetMonsterCount(folder);
-        Debug.Log($"Current MonsterCount: {CurrentFolderMonsterCount}");
+        // Debug.Log($"Current MonsterCount: {CurrentFolderMonsterCount}");
         ui_0_HUD.UpdateHUD();
 
         // 클리어 여부와 몬스터 수를 확인 후 포탈을 활성화 
+        CurrentFolder.DeActivePortal();
         CurrentFolder.CheckCurrentFolder(); 
-        Debug.Log($"Current folder set to: {CurrentFolder.FolderName}");
+        // Debug.Log($"Current folder set to: {CurrentFolder.FolderName}");
 
         // 현재 폴더를 발견 상태로 만듦.
         CurrentFolder.isDetectionDone = true;
 
         // 연결된 폴더도 모두 발견 상태로 만듦.
+        if (CurrentFolder == null)
+        {
+            Debug.LogError("CurrentFolder is null");
+            return;
+        }
+
+        if (CurrentFolder.Portals == null)
+        {
+            Debug.LogError("CurrentFolder.Portals is null");
+            return;
+        }
+
         foreach (Portal portal in CurrentFolder.Portals)
         {
+            if (portal == null)
+            {
+                Debug.LogWarning("Portal is null.");
+                continue;
+            }
+
+            if (portal.ConnectedFolder == null)
+            {
+                Debug.LogWarning($"Portal {portal.name} does not have a connected folder.");
+                continue;
+            }
+
             portal.ConnectedFolder.isDetectionDone = true;
         }
     }
@@ -125,35 +151,20 @@ public class FolderManager : MonoBehaviour
         CurrentFolder.SetFolderDeActive();
 
         SetCurrentFolder(folder);
-
-        // 현재 맵의 포탈을 모두 비활성화
-        // DeAcitivateAllPortals();
-
-        // 클리어 여부와 몬스터 수를 확인 후 포탈을 활성화 
-        // CurrentFolder.CheckCurrentFolder();
-        // 디버깅용 상시 포탈 활성화
-        // CurrentFolder.ActivePortal();
-    }
-
-    private void DeAcitivateAllPortals()
-    {
-        if(CurrentFolder.Left_Portal != null)
-            CurrentFolder.Left_Portal.DeActivatePortal();
-        
-        foreach(Portal portal in CurrentFolder.Portals)
-        {
-            portal.DeActivatePortal();
-        }
     }
 
     // 상위 폴더로 이동(왼쪽 포탈)
-    public void MoveToPreviousFolder(int ParentPortalIndex)
+    public void MoveToPreviousFolder(int ParentPortalIndex, Portal preportal)
     {
         if (CurrentFolder == null || CurrentFolder.Parent == null)
         {
-            // Debug.Log("No previous folder available.");
+            Debug.Log("No previous folder available.");
             return;
         }
+
+        FolderNode PreviousFolderNode = CurrentFolder;
+        PreviousPortal = preportal;
+
         // 플레이어 위치 조정: 상위 폴더의 연결된 오른쪽 포탈 근처로 이동
         Portal CurrentPortal = CurrentFolder.Left_Portal;
         FolderNode DestinationFolder = CurrentPortal.ConnectedFolder;
@@ -167,10 +178,11 @@ public class FolderManager : MonoBehaviour
         }
 
         MoveToFolder(DestinationFolder);
+        PreviousFolderNode.DeActivePortal();
     }
 
     // 하위 폴더로 이동 (오른쪽 포탈을 이용하는 경우)
-    public void MoveToNextFolder(int portalIndex)
+    public void MoveToNextFolder(int portalIndex, Portal preportal)
     {
         Debug.Log("MoveToNextFolder");
         if (CurrentFolder == null) return;
@@ -179,8 +191,15 @@ public class FolderManager : MonoBehaviour
             Debug.Log("out of index");
             return;
         }
+
+        FolderNode PreviousFolderNode = CurrentFolder;
+        PreviousPortal = preportal;
+
+        // 플레이어 위치 조정: 하위 폴더의 왼쪽 포탈 근처로 이동
         Portal CurrentPortal = CurrentFolder.Portals[portalIndex];
-        if(CurrentPortal == null)
+        FolderNode DestinationFolder = CurrentPortal.ConnectedFolder;
+
+        if (CurrentPortal == null)
         {
             Debug.Log("CurrentPortal is null");
             return;
@@ -191,10 +210,6 @@ public class FolderManager : MonoBehaviour
             return;
         }
 
-        FolderNode PreviousFolderNode = CurrentFolder;
-        MoveToFolder(CurrentPortal.ConnectedFolder);
-
-        // 플레이어 위치 조정: 하위 폴더의 왼쪽 포탈 근처로 이동
         if (Player != null)
         {
             Vector3 newPosition;
@@ -204,20 +219,22 @@ public class FolderManager : MonoBehaviour
                 || CurrentFolder.Type == FolderNode.FolderType.Shop )
             {
                 // 특수 방: Y축만 0.5 위로 조정
-                newPosition = CurrentFolder.Left_Portal.transform.position;
+                newPosition = DestinationFolder.Left_Portal.transform.position;
                 newPosition.y += 3.0f; // Y축 이동
             }
             else
             {
                 // 일반 방: 기존 로직
-                newPosition = CurrentFolder.Left_Portal.transform.position;
+                newPosition = DestinationFolder.Left_Portal.transform.position;
                 newPosition.x += 0.5f; // X축 이동
                 newPosition.y -= 0.5f; // Y축 이동
             }
             Player.transform.position = newPosition;
         }
 
+        MoveToFolder(DestinationFolder);
         PreviousFolderNode.DeActivePortal();
+        DestinationFolder.Left_Portal.DelayisMovingFalse();
     }
 
     private void AllFolderDeActivate()
@@ -228,6 +245,30 @@ public class FolderManager : MonoBehaviour
             Folder.SetFolderDeActive();
         }
     }
+
+    public void AllPortalActivate()
+    {
+        if (CurrentFolder.Left_Portal != null)
+            CurrentFolder.Left_Portal.isActive = true;
+
+        foreach (Portal portal in CurrentFolder.Portals)
+        {
+            portal.isActive = true;
+        }
+    }
+
+    // 현재 맵의 포탈을 모두 초기화해주는 함수
+    public void ResetCurrentPortal()
+    {
+        if (CurrentFolder.Left_Portal != null)
+            CurrentFolder.Left_Portal.isMoving = false;
+
+        foreach (Portal portal in CurrentFolder.Portals)
+        {
+            portal.isMoving = false;
+        }
+    }
+    // 이동 후 일정 시간이 지난다음에 이전 방의 포탈의 isMoving을 false로 바꿔줘야 하는데,.,,
 
     // 맵 입장시 지정된 몬스터 개수를 불러옴
     public void SetMonsterCount(FolderNode folder)

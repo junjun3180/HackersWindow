@@ -11,6 +11,10 @@ public class UI_4_LocalDisk : MonoBehaviour
     // UI Window
     public GameObject UI_W_LocalDisk = null;
 
+    // Manager
+    private FolderManager folderManager;
+    public Player player;
+
     //주소관련
     // public List<Map> adressList = new();
     [SerializeField]
@@ -48,6 +52,7 @@ public class UI_4_LocalDisk : MonoBehaviour
     private Dictionary<int, RectTransform> nodeUIMap;       // 노드 ID와 UI RectTransform 매핑
     private Dictionary<int, List<GameObject>> linesMap;     // 각 노드에 연결된 선을 저장
 
+
     public static UI_4_LocalDisk Instance
     {
         get
@@ -83,7 +88,7 @@ public class UI_4_LocalDisk : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        folderManager = FolderManager.Instance;
     }
 
     // Update is called once per frame
@@ -231,6 +236,13 @@ public class UI_4_LocalDisk : MonoBehaviour
                     RectTransform parentUI = nodeUIMap[node.Parent.GetInstanceID()];
                     DrawLine(node.Parent, node, parentUI, rectTransform);
                 }
+
+                // 버튼 이벤트 
+                Button button = newNodeUI.GetComponent<Button>();
+                if (button != null)
+                {
+                    button.onClick.AddListener(() => OnNodeButtonClicked(node));
+                }
             }
         }
     }
@@ -270,6 +282,42 @@ public class UI_4_LocalDisk : MonoBehaviour
         linesMap[endNodeID].Add(line.gameObject);
     }
 
+    private void OnNodeButtonClicked(FolderNode node)
+    {
+        if (node == null)
+        {
+            Debug.LogError("Folder is null.");
+            return;
+        }
+
+        // 클리어 상태 확인
+        if (!node.IsCleared)
+        {
+            Debug.Log($"Folder {node.FolderName} is not cleared.");
+            return;
+        }
+
+        // 이동 로직 실행
+        Debug.Log($"Moving to Folder {node.FolderName}");
+        folderManager.MoveToFolder(node);
+
+        Transform teleportPoint = node.transform.Find("TeleportPoint");
+        if (teleportPoint != null && player != null)
+        {
+            player.transform.position = teleportPoint.position;
+            Debug.Log($"Player moved to {node.FolderName} at {teleportPoint.position}");
+        }
+        else
+        {
+            Debug.LogWarning("TeleportPoint not found or Player is null.");
+        }
+        
+        // 현재 포탈을 모두 활성화
+        folderManager.ResetCurrentPortal();
+    }
+
+
+
     public void UpdateNodeUIStates()
     {
         Debug.Log("UpdateNodeUIStates");
@@ -297,16 +345,23 @@ public class UI_4_LocalDisk : MonoBehaviour
                 Debug.LogError("Image Component is not found");
                 return;
             }
-
-            // 발견 O + 클리어 X : 색상을 어둡게 처리
-            if (node.isDetectionDone && !node.IsCleared)
+            // 탐색되지 않은 경우 UI 비활성화
+            if (node.isDetectionDone == false)
             {
+                nodeGameObject.SetActive(false);
+            }
+            // 발견 O + 클리어 X : 색상을 어둡게 처리
+            else if (node.isDetectionDone == true && node.IsCleared == false)
+            {
+                Debug.Log("발견 O + 클리어 X");
                 nodeGameObject.SetActive(true);
                 imageComponent.color = new Color(0.3f, 0.3f, 0.3f, 0.6f);
             }
             // 발견 O + 클리어 O : 색상 원복, 선 활성화
-            else if (node.isDetectionDone && node.IsCleared)
+            else if (node.isDetectionDone == true && node.IsCleared == true)
             {
+                Debug.Log("발견 O + 클리어 O");
+                nodeGameObject.SetActive(true);
                 imageComponent.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
                 if (linesMap.ContainsKey(nodeID))
                 {
@@ -316,22 +371,16 @@ public class UI_4_LocalDisk : MonoBehaviour
                     }
                 }
             }
-            // 탐색되지 않은 경우 UI 비활성화
-            else if (!node.isDetectionDone)
+            else
             {
-                nodeGameObject.SetActive(false);
+                Debug.LogError("이상한 상태가 별견됨");
             }
+            
         }
     }
 
 
     // 아래는 기존 동근이가 작성한 코드임
-    IEnumerator LayoutReset(RectTransform obj)
-    {
-        yield return new WaitForEndOfFrame();
-        LayoutRebuilder.ForceRebuildLayoutImmediate(obj);
-
-    }
 
     public void AdressReset()
     {

@@ -87,12 +87,16 @@ public class FolderNode : MonoBehaviour
 
         // 왼쪽 포탈 활성화
         if (Left_Portal != null)
-            Left_Portal.ActivatePortal();
+        {
+            Left_Portal.isActive = true;
+            Left_Portal.SetClearTrigger();
+        }
 
         // 오른쪽 포탈들 활성화
         foreach (var portal in Portals)
         {
-            portal.ActivatePortal();
+            portal.isActive = true;
+            portal.SetClearTrigger();
         }
     }
 
@@ -103,12 +107,12 @@ public class FolderNode : MonoBehaviour
 
         // 왼쪽 포탈 비활성화
         if (Left_Portal != null)
-            Left_Portal.DeActivatePortal();
+            Left_Portal.isActive = false;
 
         // 오른쪽 포탈들 비활성화
         foreach (var portal in Portals)
         {
-            portal.DeActivatePortal();
+            portal.DeActivePortal();
         }
     }
 

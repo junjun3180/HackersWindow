@@ -42,7 +42,7 @@ public class UIManager : MonoBehaviour
 
     // Manger
     private StatusManager statusManager;
-
+    private FolderManager folderManager;
 
     // Test - 기능모듈화
     public enum UI
@@ -87,7 +87,7 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         statusManager = StatusManager.Instance;
-
+        folderManager = FolderManager.Instance;
 
         // UI Panel 비활성화 시작
         WindowUI.SetActive(false);
@@ -123,13 +123,10 @@ public class UIManager : MonoBehaviour
 
     void Update()
     {
-        if (!ui_8_ProgramInstall.isESCDisabled && Input.GetKeyDown(KeyCode.Escape))
+        if (!ui_8_ProgramInstall.isESCDisabled && folderManager.CurrentFolder.IsCleared && Input.GetKeyDown(KeyCode.Escape))
         {
-            // Debug.Log("ui_8_ProgramInstall.isESCDisabled" + ui_8_ProgramInstall.isESCDisabled);
-            // if (mapGenerator.currentMapClear)
-            {
-                WindowUISetActive();
-            }
+            WindowUISetActive();
+
         }
     }
 

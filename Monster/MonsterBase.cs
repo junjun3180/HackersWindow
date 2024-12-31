@@ -54,7 +54,7 @@ public class MonsterBase : MonoBehaviour
     protected Animator MAnimator;
     protected Rigidbody2D rb;
 
-    FolderManager folderManager;
+    protected FolderManager folderManager;
 
     // Start is called before the first frame update
     protected virtual void Start()

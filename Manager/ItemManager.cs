@@ -17,7 +17,7 @@ public class ItemManager : MonoBehaviour
     private Player player;
     Rigidbody2D rb;
 
-    // 아이템 프리펩
+    [Header("Item Prefab")]
     public GameObject P_Coin1;
     public GameObject P_Coin5;
     public GameObject P_Coin10;
@@ -50,6 +50,15 @@ public class ItemManager : MonoBehaviour
 
     GameObject SpawnObject = null;
     GameObject droppedItem = null;
+
+    // 아이템 이름
+    private string KeyName;
+    private string ForcedDeletionName;
+    private string Coin1_Name;
+    private string Coin5_Name;
+    private string Coin10_Name;
+    private string Coin15_Name;
+    private string Coin100_Name;
 
     // ItemType을 키로, 이미지 인덱스를 값으로 저장하는 Dictionary
     public static Dictionary<ItemType, int> ImageIndexMap = new Dictionary<ItemType, int>()
@@ -86,12 +95,25 @@ public class ItemManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            itemList = new SortedDictionary<string, List<Item>>(new CoinComparer());
             DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
+        }
+
+        // 이름 지정
+        KeyName = P_Key.GetComponent<Item>().ItemName;
+        ForcedDeletionName = P_ForcedDeletion.GetComponent<Item>().ItemName;
+        Coin1_Name = P_Coin1.GetComponent<Item>().ItemName;
+        Coin5_Name = P_Coin5.GetComponent<Item>().ItemName;
+        Coin10_Name = P_Coin10.GetComponent<Item>().ItemName;
+        Coin15_Name = P_Coin15.GetComponent<Item>().ItemName;
+        Coin100_Name = P_Coin100.GetComponent<Item>().ItemName;
+
+        if (itemList == null)
+        {
+            itemList = new SortedDictionary<string, List<Item>>(new ItemManager.CoinComparer(this));
         }
     }
 
@@ -101,6 +123,7 @@ public class ItemManager : MonoBehaviour
         uIManager = UIManager.Instance;
         ui_0_HUD = UI_0_HUD.Instance;
         player = GameManager.Instance.GetPlayer();
+
     }
 
     // Update is called once per frame
@@ -112,14 +135,19 @@ public class ItemManager : MonoBehaviour
     // 코인 순서에 맞춰 정렬하기 위한 비교기
     public class CoinComparer : IComparer<string>
     {
-        private readonly Dictionary<string, int> customOrder = new Dictionary<string, int>
+        private Dictionary<string, int> customOrder;
+
+        public CoinComparer(ItemManager manager)
         {
-            { "(1) 메가 바이트 코인", 1 },
-            { "(5) 메가 바이트 코인", 2 },
-            { "(10) 메가 바이트 코인", 3 },
-            { "(15) 메가 바이트 코인", 4 },
-            { "(100) 메가 바이트 코인", 5 }
-        };
+            customOrder = new Dictionary<string, int>
+            {
+                { manager.Coin1_Name, 1 },
+                { manager.Coin5_Name, 2 },
+                { manager.Coin10_Name, 3 },
+                { manager.Coin15_Name, 4 },
+                { manager.Coin100_Name, 5 }
+            };
+        }
 
         public int Compare(string x, string y)
         {
@@ -263,9 +291,9 @@ public class ItemManager : MonoBehaviour
     public int GetKeyCount()
     {
         int KeyCount = 0;
-        if (ItemManager.Instance.itemList.ContainsKey("잠금파일 해독 키"))
+        if (itemList.ContainsKey(KeyName))
         {
-            KeyCount = ItemManager.Instance.itemList["잠금파일 해독 키"].Count;
+            KeyCount = itemList[KeyName].Count;
         }
         return KeyCount;
     }
@@ -273,25 +301,25 @@ public class ItemManager : MonoBehaviour
     public int GetCoinCount()
     {
         int CoinCount = 0;
-        if (ItemManager.Instance.itemList.ContainsKey("(1) 메가 바이트 코인"))
+        if (itemList.ContainsKey(Coin1_Name))
         {
-            CoinCount += ItemManager.Instance.itemList["(1) 메가 바이트 코인"].Count;
+            CoinCount += itemList[Coin1_Name].Count;
         }
-        if (ItemManager.Instance.itemList.ContainsKey("(5) 메가 바이트 코인"))
+        if (itemList.ContainsKey(Coin5_Name))
         {
-            CoinCount += 5 * ItemManager.Instance.itemList["(5) 메가 바이트 코인"].Count;
+            CoinCount += 5 * itemList[Coin5_Name].Count;
         }
-        if (ItemManager.Instance.itemList.ContainsKey("(10) 메가 바이트 코인"))
+        if (itemList.ContainsKey(Coin10_Name))
         {
-            CoinCount += 10 * ItemManager.Instance.itemList["(10) 메가 바이트 코인"].Count;
+            CoinCount += 10 * itemList[Coin10_Name].Count;
         }
-        if (ItemManager.Instance.itemList.ContainsKey("(15) 메가 바이트 코인"))
+        if (itemList.ContainsKey(Coin15_Name))
         {
-            CoinCount += 15 * ItemManager.Instance.itemList["(15) 메가 바이트 코인"].Count;
+            CoinCount += 15 * itemList[Coin15_Name].Count;
         }
-        if (ItemManager.Instance.itemList.ContainsKey("(100) 메가 바이트 코인"))
+        if (itemList.ContainsKey(Coin100_Name))
         {
-            CoinCount += 100 * ItemManager.Instance.itemList["(100) 메가 바이트 코인"].Count;
+            CoinCount += 100 * itemList[Coin100_Name].Count;
         }
         return CoinCount;
     }
@@ -299,28 +327,27 @@ public class ItemManager : MonoBehaviour
     public int GetBombCount()
     {
         int BombCount = 0;
-        if (itemList.ContainsKey("강제삭제 포로세스"))
+
+        if (itemList.ContainsKey(ForcedDeletionName))
         {
-            BombCount = itemList["강제삭제 포로세스"].Count;
+            BombCount = itemList[ForcedDeletionName].Count;
         }
         return BombCount;
     }
 
     public bool KeyUse()
     {
-        string keyName = "잠금파일 해독키"; // 찾고자 하는 키의 이름
-
         // 키 아이템이 itemList에 있고, 해당 리스트에 아이템이 하나 이상 있는지 확인
-        if (itemList.ContainsKey(keyName) && itemList[keyName].Count > 0)
+        if (itemList.ContainsKey(KeyName) && itemList[KeyName].Count > 0)
         {
-            Item keyItem = itemList[keyName][0]; // 첫 번째 아이템 가져오기
+            Item keyItem = itemList[KeyName][0]; // 첫 번째 아이템 가져오기
             statusManager.CurrentStorage -= keyItem.ItemSize; // 사용 후 저장소 용량 줄이기
-            itemList[keyName].Remove(keyItem); // 사용한 아이템 제거
+            itemList[KeyName].Remove(keyItem); // 사용한 아이템 제거
 
             // 해당 키가 더 이상 없으면 리스트에서 키 자체를 삭제
-            if (itemList[keyName].Count == 0)
+            if (itemList[KeyName].Count == 0)
             {
-                itemList.Remove(keyName);
+                itemList.Remove(KeyName);
             }
 
             ui_0_HUD.UpdateHUD(); // HUD 업데이트

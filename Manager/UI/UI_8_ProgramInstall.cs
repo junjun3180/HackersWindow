@@ -35,6 +35,7 @@ public class UI_8_ProgramInstall : MonoBehaviour
     public Text UI_1_Info;
 
     public GameObject DownLoadUI2;
+    public Text ProgramName;
     public Animator DAnimator;
 
     public GameObject DownLoadUI3;

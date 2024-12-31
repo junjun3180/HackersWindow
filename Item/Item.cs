@@ -227,7 +227,6 @@ public class Item : MonoBehaviour
     private void KeyItem()
     {
         AddItem();
-        Debug.Log("키 기능 구현 안되어 있음");
     }
 
     private void CardPackItem()

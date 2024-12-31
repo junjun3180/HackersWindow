@@ -27,15 +27,15 @@ public class FolderGenerator : MonoBehaviour
     private List<FolderNode> spawnedFolders = new List<FolderNode>();
     private FolderNode rootFolder;
 
-    [Header("Portal Sprite")]
-    public Sprite bossPortalSprite;
-    public Sprite shopPortalSprite;
-    public Sprite downloadPortalSprite;
-    public Sprite Charge_room;
-    public Sprite Guard_room;
-    public Sprite Juva_cafe;
-    public Sprite Trash_room;
-    public Sprite Default;
+    [Header("Portal Prefabs")]
+    public GameObject BossPortal;
+    public GameObject ShopPortal;
+    public GameObject DownloadPortal;
+    public GameObject Charge_room;
+    public GameObject Guard_room;
+    public GameObject Juva_cafe;
+    public GameObject Trash_room;
+    public GameObject Default;
 
     [Header("Spacing Settings")]
     public float HorizontalSpacing;
@@ -125,7 +125,7 @@ public class FolderGenerator : MonoBehaviour
         }
 
         // FolderNode가 성공적으로 찾은 경우
-        Debug.Log("FolderNode component found successfully.");
+        // Debug.Log("FolderNode component found successfully.");
 
         return folderNode;
     }
@@ -287,23 +287,37 @@ public class FolderGenerator : MonoBehaviour
             FolderNode childNode = node.Children[i];
             Portal rightPortal = node.Portals[i];
 
+
+            // 연결된 자식 폴더 타입에 따라 포탈 프리펩 변경
+            if (childNode.Type != FolderNode.FolderType.Middle)
+            {
+                GameObject newPortalPrefab = GetPortalPrefabsForFolderType(childNode);
+                if (newPortalPrefab != null)
+                {
+                    // 기존 포탈 삭제
+                    Transform parentTransform = rightPortal.transform.parent;
+                    Vector3 oldPortalPosition = rightPortal.transform.localPosition;
+                    Quaternion oldPortalRotation = rightPortal.transform.localRotation;
+
+                    Destroy(rightPortal.gameObject);
+
+                    // 새 포탈 생성
+                    GameObject newPortal = Instantiate(newPortalPrefab, parentTransform);
+                    newPortal.transform.localPosition = oldPortalPosition;
+                    newPortal.transform.localRotation = oldPortalRotation;
+
+                    // 새로 생성된 포탈의 Portal 컴포넌트 참조 설정
+                    node.Portals[i] = newPortal.GetComponent<Portal>();
+                    if (node.Portals[i] != null)
+                    {
+                        node.Portals[i].PortalIndex = i;
+                        node.Portals[i].SetConnectedFolder(childNode, 0);
+                    }
+                }
+            }
+
             // 현재 맵 -> 자식 맵 포탈 이어주기
             rightPortal.SetConnectedFolder(childNode, 0);
-
-            // 기본 폴더를 제외한 폴더랑 연결된 포탈의 경우 애니메이터 비활성화
-            if(childNode.Type != FolderNode.FolderType.Middle || childNode.Type != FolderNode.FolderType.Start)
-            {
-                Animator animator = rightPortal.GetComponent<Animator>();
-                animator.enabled = false;
-            }
-
-            // 연결된 자식 폴더 타입에 따라 포탈 이미지 변경
-            Sprite portalSprite = GetPortalSpriteForFolderType(childNode);
-            if (portalSprite != null)
-            {
-                UpdatePortalImage(rightPortal, portalSprite);
-            }
-
 
             // 자식 맵 -> 현재 맵 포탈 이어주기
             Portal leftPortal = childNode.Left_Portal;
@@ -318,43 +332,17 @@ public class FolderGenerator : MonoBehaviour
         }
     }
 
-    private void UpdatePortalImage(Portal portal, Sprite newSprite)
-    {
-        if (portal == null)
-        {
-            Debug.LogError("Portal is null. Cannot update image.");
-            return;
-        }
-
-        SpriteRenderer portalImage = portal.GetComponent<SpriteRenderer>();
-        if (portalImage != null)
-        {
-            if (newSprite != null)
-            {
-                portalImage.sprite = newSprite;
-                Debug.Log($"Portal {portal.name} sprite updated to {newSprite.name}");
-            }
-            else
-            {
-                Debug.LogWarning($"New sprite for Portal {portal.name} is null. No change applied.");
-            }
-        }
-        else
-        {
-            Debug.LogError($"Portal {portal.name} does not have a SpriteRenderer component!");
-        }
-    }
-
-    private Sprite GetPortalSpriteForFolderType(FolderNode node)
+    // BossFolderPrefabs
+    private GameObject GetPortalPrefabsForFolderType(FolderNode node)
     {
         switch (node.Type)
         {
             case FolderNode.FolderType.Boss:
-                return bossPortalSprite;
+                return BossPortal;
             case FolderNode.FolderType.Shop:
-                return shopPortalSprite;
+                return ShopPortal;
             case FolderNode.FolderType.Download:
-                return downloadPortalSprite;
+                return DownloadPortal;
             case FolderNode.FolderType.RandomSpecial:
                 string name = node.name;
                 if (name == "Charge_room(Clone)")
@@ -371,8 +359,7 @@ public class FolderGenerator : MonoBehaviour
                     return null;
                 }
             default:
-                Debug.Log($"Returning default sprite for folder type {node.Type}");
-                return Default; // 기본 포탈 이미지
+                return null; // 기본 포탈 이미지
         }
     }
 
