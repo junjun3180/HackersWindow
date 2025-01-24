@@ -1,11 +1,9 @@
 using System.Collections;
-using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Networking.PlayerConnection;
 
 public class Portal : MonoBehaviour
 {
+    #region Definition
 
     public enum PortalDirection { Left, Right } // 포탈 방향
 
@@ -31,6 +29,10 @@ public class Portal : MonoBehaviour
     // 키 아이템 사용
     ItemManager itemManager;
 
+    #endregion
+
+    #region Default Function
+
     public void Awake()
     {
         animator = GetComponent<Animator>();
@@ -41,6 +43,10 @@ public class Portal : MonoBehaviour
         folderManager = FolderManager.Instance;
         itemManager = ItemManager.Instance;
     }
+
+    #endregion
+
+    #region Trigger
 
     // OnTriggerEnter2D, OnTriggerStay2D 이 두개는 로직이 같음
     // 플레이어를 현재 상태를 체크해서 이동시키는 역할을 담당하는 함수
@@ -73,6 +79,12 @@ public class Portal : MonoBehaviour
             isLocking = false;
             StartCoroutine(DelayAfterPortalActive(1.5f));
         }
+        else if (folderManager.CurrentFolder.Type == FolderNode.FolderType.Hidden)
+        {
+            // 히든 맵의 경우 별도의 이동 함수를 사용
+            Debug.Log("Hidden Folder Portal Enter");
+            MoveHiddenToPreFolder();
+        }
         else if (isLocking == false)
         {
             // 실질적인 로직 작동 부분
@@ -88,8 +100,6 @@ public class Portal : MonoBehaviour
         if (isLocking)
             return;
     }
-
-
 
     // 콜라이더 내부 움직임을 감지하는 함수.
     // 포탈을 나가자마자 다시 콜라이더 안으로 들어올 경우 플레이어를 이동시킴
@@ -143,7 +153,6 @@ public class Portal : MonoBehaviour
         isActive = true;
     }
 
-
     // 콜라이더 탈출 감지 함수
     // 콜라이더를 벗어나면 몇초 후 포탈을 활성화시킨다.
     private void OnTriggerExit2D(Collider2D collision)
@@ -167,12 +176,6 @@ public class Portal : MonoBehaviour
         }
     }
 
-    public void DelayisMovingFalse()
-    {
-        // Debug.Log("DelayisMovingFalse");
-        StartCoroutine(DelayAfterPortalisMoving(1.5f));
-    }
-
     private IEnumerator DelayAfterPortalisMoving(float delay)
     {
         // delay만큼 대기
@@ -185,6 +188,14 @@ public class Portal : MonoBehaviour
         if (folderManager.PreviousPortal != null)
             folderManager.PreviousPortal.isMoving = false;
     }
+
+    public void DelayisMovingFalse()
+    {
+        // Debug.Log("DelayisMovingFalse");
+        StartCoroutine(DelayAfterPortalisMoving(1.5f));
+    }
+
+    #endregion
 
     // 플레이어 위치를 이동시킨다.
     // 포탈 방향에 따라 이동시킴(Left, Right)
@@ -208,6 +219,15 @@ public class Portal : MonoBehaviour
         }
     }
 
+    // 히든 폴더에서 이전 폴더로 이동시키는 함수
+    public void MoveHiddenToPreFolder()
+    {
+        if (ConnectedFolder == null) return;
+        if(folderManager == null) return;
+
+        folderManager.MoveHiddenToPre(ConnectedFolder);
+    }
+
     // 포탈 연결용 함수
     // 맵 생성기에서 사용
     public void SetConnectedFolder(FolderNode conneted, int parentPortalIndex)
@@ -215,6 +235,13 @@ public class Portal : MonoBehaviour
         ConnectedFolder = conneted;
         ParentPortalIndex = parentPortalIndex;
     }
+
+    // 히든 폴더 연결용 함수
+    // 히든 맵에 이동할 때 이전 맵을 히든 폴더의 포탈과 연결
+    //public void SetConnectedHiddenFolder()
+    //{
+    //    ConnectedFolder = folderManager.previousFolder;
+    //}
 
     // 애니메이터에서 문을 열어주는 이벤트 실행기
     public void SetClearTrigger()
@@ -236,7 +263,6 @@ public class Portal : MonoBehaviour
                 break;
         }
     }
-
 
     public void DeActivePortal()
     {

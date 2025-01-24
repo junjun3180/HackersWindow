@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PoolingManager : MonoBehaviour
 {
+    #region Variables
+
     private static PoolingManager instance = null;
     public GameObject[] bulletList;
     public GameObject[] monsterList;
@@ -13,6 +15,9 @@ public class PoolingManager : MonoBehaviour
     public Queue<Bullet> bulletPool = new Queue<Bullet>();
     public Transform shotPoint;
 
+    #endregion
+
+    #region Default Function
 
     public static PoolingManager Instance
     {
@@ -33,6 +38,7 @@ public class PoolingManager : MonoBehaviour
             return instance;
         }
     }
+
     private void Awake()
     {
         if (null == instance)
@@ -51,7 +57,18 @@ public class PoolingManager : MonoBehaviour
         BulletMake(0);
     }
 
-    
+    private void OnDisable()
+    {
+        for (int i = 0; i < bulletList.Length; i++)
+        {
+            bulletList[i].GetComponent<Bullet>().SizeReset();
+        }
+    }
+
+    #endregion
+
+    #region Pooling
+
     public void BulletMake(int bulletNum)
     {
         for (int i = 0; i < bulletCount; i++)
@@ -67,6 +84,7 @@ public class PoolingManager : MonoBehaviour
             bulletObject.transform.SetAsLastSibling();
         }
     }
+
     public void ReMakeBullet(int Bulletindex)
     {
         foreach (Transform child in bulletBox.transform)
@@ -89,12 +107,7 @@ public class PoolingManager : MonoBehaviour
         // 큐 비워짐, 총알 새로 생성
         BulletMake(Bulletindex); // `currentBulletNum`은 새로 만들 총알의 번호
     }
-    private void OnDisable()
-    {
-        for(int i = 0; i < bulletList.Length; i++)
-        {
-            bulletList[i].GetComponent<Bullet>().SizeReset();
-        }
-    }
+
+    #endregion
 }
 

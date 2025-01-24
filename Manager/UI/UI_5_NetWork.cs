@@ -45,18 +45,6 @@ public class UI_5_NetWork : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OpenUI()
     {
         if (UI_W_NetWork != null)

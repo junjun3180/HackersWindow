@@ -5,23 +5,27 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] Weapon weapon;
-    Rigidbody2D playerRigid;
-    SpriteRenderer playerSprite;
-    Animator anim;
+    #region Variable
 
-    //플레이어 카메라
-    public Camera camera;
+    [SerializeField] Weapon weapon;
+    [SerializeField] private Rigidbody2D playerRigid;
+    [SerializeField] private SpriteRenderer playerSprite;
+    [SerializeField] private Animator anim;
+
+    #endregion
+
+    #region Manager
 
     // Manager
     private UIManager uiManager;
     private StatusManager statusManager;
 
+    #endregion
+
+    #region Default Function
+
     void Start()
     {
-        playerRigid = gameObject.GetComponent<Rigidbody2D>();
-        playerSprite = gameObject.GetComponent<SpriteRenderer>();
-        anim = gameObject.GetComponent<Animator>();
         uiManager = UIManager.Instance;
         statusManager = StatusManager.Instance;
     }
@@ -32,9 +36,11 @@ public class Player : MonoBehaviour
         Move();
         RotateWeapon();
         RotatePlayer();
-        // 몬스터 강제삭제 알고리즘
-        // FDeleteMonster();
     }
+
+    #endregion
+
+    #region Dynamic Player Function
 
     public void Move() //플레이어 이동
     {
@@ -119,51 +125,6 @@ public class Player : MonoBehaviour
         // 무기 위치 설정
         weapon.transform.position = transform.position + direction * statusManager.WeaponDistance;
     }
-   
-    public Weapon GetWeapon()
-    {
-        return weapon;
-    }
- 
 
-
-    // ====== 몬스터 강제 삭제 알고리즘(수정 중) ======
-    /*
-    public void FDeleteMonster()
-    {
-        if (EnomyDelete)
-        {
-            if (Time.time >= NextDeleteTime)
-            {
-                // 캐릭터 주변의 모든 몬스터 탐색
-                Collider2D[] hitMonsters = Physics2D.OverlapCircleAll(transform.position, detectionRadius);
-
-                foreach (Collider2D collider in hitMonsters)
-                {
-                    Monster monster = collider.GetComponent<Monster>();
-
-                    if (monster != null)
-                    {
-                        Destroy(monster.gameObject);
-                        Debug.Log("Monster is deleted");
-                        break;
-                    }
-                    else
-                    {
-
-                    }
-                }
-
-                NextDeleteTime = Time.time + DelayTime; // 다음 삭제 가능 시간 업데이트
-            }
-        }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectionRadius);
-    }
-    */
-    // ====== 몬스터 강제 삭제 알고리즘(수정 중) ======
+    #endregion
 }

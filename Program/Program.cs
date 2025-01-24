@@ -22,12 +22,6 @@ public class Program : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     // Program Delete Function
     public void DeleteProgram()
     {

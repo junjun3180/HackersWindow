@@ -1,24 +1,40 @@
+using Cinemachine;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.WSA;
 
 public class FolderManager : MonoBehaviour
 {
+    #region Manager
     // 싱글톤 인스턴스
     private static FolderManager instance = null;
 
-    public GameObject Player; // 캐릭터 위치
+    private UI_0_HUD ui_0_HUD; // HUD를 갱신하기 위한 참조
+    private UI_4_LocalDisk localDiskUI;
 
+    #endregion
+
+    #region Definition
+
+    public GameObject Player; // 캐릭터 위치
     public List<FolderNode> AllFolders = new List<FolderNode>(); // 모든 폴더 리스트
+    public List<GameObject> specialFolderList = new List<GameObject>(); // 스페셜 폴더 리스트
+    public FolderNode previousFolder; // 이전 폴더
     public FolderNode CurrentFolder; // 현재 폴더
     public FolderGenerator FolderGenerator; // 폴더 생성기
     public int CurrentFolderMonsterCount = 0;
     public FolderNode rootFolder;
 
+    [Header("Portal")]
     public Portal PreviousPortal = null;
 
-    private UI_0_HUD ui_0_HUD; // HUD를 갱신하기 위한 참조
-    private UI_4_LocalDisk localDiskUI;
+    // Camera
+    [SerializeField] private CinemachineVirtualCamera camera;
+    CameraManager cameraManager;
+    #endregion
+
+    #region Base Function
+
     private void Awake()
     {
         if (instance == null)
@@ -60,7 +76,7 @@ public class FolderManager : MonoBehaviour
 
         ui_0_HUD = UI_0_HUD.Instance;
         localDiskUI = UI_4_LocalDisk.Instance;
-
+        cameraManager = CameraManager.Instance;
         // 맵 생성 시작
         GenerateMap();
 
@@ -74,12 +90,15 @@ public class FolderManager : MonoBehaviour
         }
     }
 
+    #endregion
+
     // 맵 생성 시작
     public void GenerateMap()
     {
         FolderGenerator.GenerateMap();
         rootFolder = FolderGenerator.GetRootNode();
-
+        specialFolderList = FolderGenerator.hiddenFolderList;
+         
         if (rootFolder == null)
         {
             Debug.LogError("Root folder is null. Map generation failed.");
@@ -87,8 +106,9 @@ public class FolderManager : MonoBehaviour
         }
 
         CurrentFolder = rootFolder; // 루트 폴더를 현재 폴더로 설정
-        // Debug.Log("Map generation completed.");
     }
+
+    #region Current Folder Setting, Getting Info
 
     // 현재 폴더 설정
     public void SetCurrentFolder(FolderNode folder)
@@ -142,15 +162,35 @@ public class FolderManager : MonoBehaviour
         }
     }
 
+    public bool IsClear(){ return CurrentFolder.IsCleared; }
+
+    #endregion
+
+    #region Folder Move
+
     // 폴더 이동
     public void MoveToFolder(FolderNode folder)
     {
+        Debug.Log("MoveToFolder");
         if (folder == null) return;
 
         folder.SetFolderActive();
         CurrentFolder.SetFolderDeActive();
 
         SetCurrentFolder(folder);
+
+        if(folder.Type == FolderNode.FolderType.RandomSpecial)
+        {
+            // camera.m_Lens.OrthographicSize = 8.0f;
+            cameraManager.switcherCamera(folder.mapCamera);
+        }
+        else
+        {
+            // camera.m_Lens.OrthographicSize = 5.77f;
+            cameraManager.switchPrimaryCamera();
+        }
+
+        cameraManager.SetCollider();
     }
 
     // 상위 폴더로 이동(왼쪽 포탈)
@@ -184,7 +224,7 @@ public class FolderManager : MonoBehaviour
     // 하위 폴더로 이동 (오른쪽 포탈을 이용하는 경우)
     public void MoveToNextFolder(int portalIndex, Portal preportal)
     {
-        Debug.Log("MoveToNextFolder");
+        // Debug.Log("MoveToNextFolder");
         if (CurrentFolder == null) return;
         if (portalIndex < 0 || portalIndex >= CurrentFolder.Portals.Length)
         {
@@ -237,6 +277,39 @@ public class FolderManager : MonoBehaviour
         DestinationFolder.Left_Portal.DelayisMovingFalse();
     }
 
+    public void MoveHiddenFolder(string Name)
+    {
+        Debug.Log("MoveHiddenFolder");
+
+        foreach (var cur in specialFolderList)
+        {
+            FolderNode folder = cur.GetComponent<FolderNode>();
+            if (folder.FolderName == Name)
+            {
+                Debug.Log("Find");
+                previousFolder = CurrentFolder;
+                folder.Left_Portal.ConnectedFolder = previousFolder;
+                Player.transform.position = folder.transform.Find("TeleportPoint").position;
+                MoveToFolder(folder);
+                break;   
+            }
+        }
+    }
+
+    public void MoveHiddenToPre(FolderNode folder)
+    {
+        Debug.Log("MoveHiddenToPre");
+
+        CurrentFolder.DeActivePortal();
+
+        Player.transform.position = folder.transform.Find("TeleportPoint").position;
+        MoveToFolder(folder);
+    }
+
+    #endregion
+
+    #region Activation Folder, Portal
+
     private void AllFolderDeActivate()
     {
         // 모든 폴더를 비활성화
@@ -257,6 +330,8 @@ public class FolderManager : MonoBehaviour
         }
     }
 
+    #endregion
+
     // 현재 맵의 포탈을 모두 초기화해주는 함수
     public void ResetCurrentPortal()
     {
@@ -268,7 +343,8 @@ public class FolderManager : MonoBehaviour
             portal.isMoving = false;
         }
     }
-    // 이동 후 일정 시간이 지난다음에 이전 방의 포탈의 isMoving을 false로 바꿔줘야 하는데,.,,
+    
+    #region Monster
 
     // 맵 입장시 지정된 몬스터 개수를 불러옴
     public void SetMonsterCount(FolderNode folder)
@@ -297,7 +373,7 @@ public class FolderManager : MonoBehaviour
         }
     }
 
-    public bool IsClear()
-    { return CurrentFolder.IsCleared; }
+    #endregion
+
 
 }

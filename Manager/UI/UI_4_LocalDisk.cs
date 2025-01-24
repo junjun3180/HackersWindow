@@ -6,28 +6,29 @@ using UnityEngine.UI;
 
 public class UI_4_LocalDisk : MonoBehaviour
 {
+    #region Definition
+
     private static UI_4_LocalDisk instance = null;
+    private FolderManager folderManager;
+    public Player player;
 
     // UI Window
     public GameObject UI_W_LocalDisk = null;
 
-    // Manager
-    private FolderManager folderManager;
-    public Player player;
-
     //주소관련
-    // public List<Map> adressList = new();
     [SerializeField]
     GameObject adressParent;
     [SerializeField]
     Adress_Button adressButton;
     public Text Address;
 
-    // 신규 
+    #endregion
+
+    #region UI Prefab List
+
     [Header("UI References")]
     public RectTransform content;       // 트리 UI의 Content 그룹
     public RectTransform linePrefab;    // 선으로 사용할 프리팹
-
 
     [Header("Base Folder Prefab")]
     public GameObject FoldPrefab;       // 노말 폴더 노드 프리팹
@@ -44,6 +45,9 @@ public class UI_4_LocalDisk : MonoBehaviour
     public GameObject JuvaCafePrefab;   // 상점 폴더 노드 프리팹
     public GameObject TrashRoomPrefab;  // 상점 폴더 노드 프리팹
 
+    #endregion
+
+    #region UI Information
 
     public float ySpacing = 100f; // Y축 간격
     public float xSpacing = 200f; // X축 간격
@@ -52,6 +56,9 @@ public class UI_4_LocalDisk : MonoBehaviour
     private Dictionary<int, RectTransform> nodeUIMap;       // 노드 ID와 UI RectTransform 매핑
     private Dictionary<int, List<GameObject>> linesMap;     // 각 노드에 연결된 선을 저장
 
+    #endregion
+
+    #region Default Function
 
     public static UI_4_LocalDisk Instance
     {
@@ -91,11 +98,9 @@ public class UI_4_LocalDisk : MonoBehaviour
         folderManager = FolderManager.Instance;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    #endregion
 
-    }
+    #region Open/Close UI
 
     public void OpenUI()
     {
@@ -116,6 +121,10 @@ public class UI_4_LocalDisk : MonoBehaviour
             // Debug.Log("CloseUI : UI_4_LocalDisk");
         }
     }
+
+    #endregion
+
+    #region Generation/Update UI Element
 
     public void GenerateTreeUI(FolderNode rootFolder)
     {
@@ -282,42 +291,6 @@ public class UI_4_LocalDisk : MonoBehaviour
         linesMap[endNodeID].Add(line.gameObject);
     }
 
-    private void OnNodeButtonClicked(FolderNode node)
-    {
-        if (node == null)
-        {
-            Debug.LogError("Folder is null.");
-            return;
-        }
-
-        // 클리어 상태 확인
-        if (!node.IsCleared)
-        {
-            Debug.Log($"Folder {node.FolderName} is not cleared.");
-            return;
-        }
-
-        // 이동 로직 실행
-        Debug.Log($"Moving to Folder {node.FolderName}");
-        folderManager.MoveToFolder(node);
-
-        Transform teleportPoint = node.transform.Find("TeleportPoint");
-        if (teleportPoint != null && player != null)
-        {
-            player.transform.position = teleportPoint.position;
-            Debug.Log($"Player moved to {node.FolderName} at {teleportPoint.position}");
-        }
-        else
-        {
-            Debug.LogWarning("TeleportPoint not found or Player is null.");
-        }
-        
-        // 현재 포탈을 모두 활성화
-        folderManager.ResetCurrentPortal();
-    }
-
-
-
     public void UpdateNodeUIStates()
     {
         Debug.Log("UpdateNodeUIStates");
@@ -355,7 +328,7 @@ public class UI_4_LocalDisk : MonoBehaviour
             {
                 Debug.Log("발견 O + 클리어 X");
                 nodeGameObject.SetActive(true);
-                imageComponent.color = new Color(0.3f, 0.3f, 0.3f, 0.6f);
+                imageComponent.color = new Color(0.45f, 0.45f, 0.45f, 1.0f);
             }
             // 발견 O + 클리어 O : 색상 원복, 선 활성화
             else if (node.isDetectionDone == true && node.IsCleared == true)
@@ -379,8 +352,55 @@ public class UI_4_LocalDisk : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Oncliick Function
+
+    private void OnNodeButtonClicked(FolderNode node)
+    {
+        if (node == null)
+        {
+            Debug.LogError("Folder is null.");
+            return;
+        }
+
+        // 클리어 상태 확인
+        if (!node.IsCleared)
+        {
+            Debug.Log($"Folder {node.FolderName} is not cleared.");
+            return;
+        }
+
+        // 같은 방이면 이동하지 않을 것.
+        if(folderManager?.CurrentFolder == node)
+        {
+            Debug.Log("Folder is same");
+            return;
+        }
+
+        // 이동 로직 실행
+        Debug.Log($"Moving to Folder {node.FolderName}");
+        folderManager.MoveToFolder(node);
+
+        Transform teleportPoint = node.transform.Find("TeleportPoint");
+        if (teleportPoint != null && player != null)
+        {
+            player.transform.position = teleportPoint.position;
+            Debug.Log($"Player moved to {node.FolderName} at {teleportPoint.position}");
+        }
+        else
+        {
+            Debug.LogWarning("TeleportPoint not found or Player is null.");
+        }
+
+        // 현재 포탈을 모두 활성화
+        folderManager.ResetCurrentPortal();
+    }
+
+    #endregion
 
     // 아래는 기존 동근이가 작성한 코드임
+    #region Regacy Code 
 
     public void AdressReset()
     {
@@ -415,4 +435,6 @@ public class UI_4_LocalDisk : MonoBehaviour
                 break;
         }
     }
+
+    #endregion 
 }

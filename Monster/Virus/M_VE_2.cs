@@ -17,12 +17,6 @@ public class M_VE_2 : MonsterBase
         StartCoroutine(MonsterRoutine());
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public override IEnumerator MonsterRoutine()
     {
         while (true)

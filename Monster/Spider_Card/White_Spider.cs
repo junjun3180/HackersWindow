@@ -5,7 +5,6 @@ public class White_Spider : MonsterBase
 {
     public float AttackCoolTime; 
     public float SearchingCoolTime;
-    bool First = true;
 
     // Start is called before the first frame update
     protected override void Start()
@@ -13,12 +12,6 @@ public class White_Spider : MonsterBase
         base.Start();
         monsterType = MonsterType.White_Spider;
         StartCoroutine(MonsterRoutine());
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public override IEnumerator MonsterRoutine()

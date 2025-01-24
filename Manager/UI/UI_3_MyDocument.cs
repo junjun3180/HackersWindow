@@ -84,12 +84,6 @@ public class UI_3_MyDocument : MonoBehaviour
         RemoveItemDetail();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OpenUI()
     {
         if (UI_W_MyDocument != null)
@@ -223,7 +217,7 @@ public class UI_3_MyDocument : MonoBehaviour
         {
             itemManager.RemoveItem(currentItem);
             UpdateStorage();
-            Debug.Log("사용 기능 구현해야 함");
+            itemManager.UseItem(currentItem);
         }
 
         // 리스트 갱신

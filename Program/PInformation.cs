@@ -50,12 +50,6 @@ public class PInformation : MonoBehaviour
         SetSprite(spriteSheetName, spriteIndex);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OnCollisionEnter2D(Collision2D collision)
     {
 

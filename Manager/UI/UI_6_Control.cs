@@ -93,12 +93,6 @@ public class UI_6_Control : MonoBehaviour
         SFXVolumeMuteImage.SetActive(false);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OpenUI()
     {
         if (UI_W_Control != null)

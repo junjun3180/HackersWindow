@@ -67,13 +67,6 @@ public class MonsterBase : MonoBehaviour
         folderManager = FolderManager.Instance;
         DefenseRate = 1.0f;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public virtual IEnumerator MonsterRoutine()
     {
         Debug.Log("\"MonsterRoutine \"함수를 재정의하지 않음.");
@@ -148,14 +141,18 @@ public class MonsterBase : MonoBehaviour
                 // Debug.Log("Monster Take Damage");
                 collision.gameObject.SetActive(false);
                 // Debug.Log("Attack Damage : " + statusManager.AttackPower * DefenseRate);
-                this.HP -= statusManager.AttackPower * DefenseRate;
-                
-                if (HP <= 0)
-                {
-                    Die();
-                }
+
+                Damaged(statusManager.AttackPower * DefenseRate);
+
             }
         }
+    }
+
+    public virtual void Damaged(float damage)
+    {
+        // Debug.Log("Damaged");
+        HP -= damage;
+        if (HP <= 0) Die();
     }
 
     protected virtual void Die()

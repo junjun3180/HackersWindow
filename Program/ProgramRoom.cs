@@ -4,15 +4,26 @@ using UnityEngine;
 
 public class ProgramRoom : MonoBehaviour
 {
+    #region Manager
+
+    ProgramManager programManager;
+    UI_8_ProgramInstall ui_8_ProgramInstall;
+
+    #endregion
+
+    #region Definition
+
     // DownLoad Room에서 나올 수 있는 프로그램 리스트
     public List<PInformation> ProgramList = new List<PInformation>();
     public int ProgramID;
     public SpriteRenderer spriteRenderer;
 
-    ProgramManager programManager;
-    UI_8_ProgramInstall ui_8_ProgramInstall;
 
     private bool Checking = false;
+
+    #endregion
+
+    #region Default Function
 
     // Start is called before the first frame update
     void Start()
@@ -36,6 +47,10 @@ public class ProgramRoom : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Collider
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
@@ -45,9 +60,13 @@ public class ProgramRoom : MonoBehaviour
             ui_8_ProgramInstall.FinishedInstall = false;
             ui_8_ProgramInstall.OpenUI();
             ui_8_ProgramInstall.UI_1_Info.text = ProgramList[ProgramID].Explanation;
-            ui_8_ProgramInstall.ProgramName.text = ProgramList[ProgramID].name;
+            ui_8_ProgramInstall.ProgramName.text = ProgramList[ProgramID].ProgramName;
         }
     }
+
+    #endregion
+
+    #region Program Install UI Setting
 
     public void AddProgram()
     {
@@ -77,6 +96,8 @@ public class ProgramRoom : MonoBehaviour
             Debug.LogError("Sprite not found or invalid index.");
         }
     }
+
+    #endregion
 
     // 추후 프로그램 변경 아이템용
     public void ChangeDownloadRoomProgram()

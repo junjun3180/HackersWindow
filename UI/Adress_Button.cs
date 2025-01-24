@@ -11,16 +11,11 @@ public class Adress_Button : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // mapGenerator = FindObjectOfType<MapGenerator>();
         ui_4_LocalDisk = UI_4_LocalDisk.Instance;
     }
 
     public void AdressButton()
     {
-        // Debug.Log("버튼눌림");
         int index = transform.GetSiblingIndex()-1;
-        // int targetIndex = mapGenerator.mapList.IndexOf(ui_4_LocalDisk.adressList[index]);
-        // .LocalDisckUISet(targetIndex);
-
     }
 }

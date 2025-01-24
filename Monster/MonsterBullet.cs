@@ -11,16 +11,12 @@ public class MonsterBullet : MonoBehaviour
     //한번의 충돌로 두번 효과 발생하는거 방지용
     private bool hasHit = false;
 
-
-
     // Start is called before the first frame update
     void Start()
     {
         // 일정 시간이 지나면 총알 파괴
         Destroy(gameObject, lifeTime);
     }
-
-
 
     // 충돌 처리
     void OnTriggerEnter2D(Collider2D hitInfo)

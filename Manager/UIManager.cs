@@ -7,10 +7,16 @@ using static UnityEditor.Progress;
 
 public class UIManager : MonoBehaviour
 {
+    #region Manager
+
     private static UIManager instance = null;
 
-    // [SerializeField]
-    // MapGenerator mapGenerator;
+    private StatusManager statusManager;
+    private FolderManager folderManager;
+
+    #endregion
+
+    #region Frame UI Element
 
     // Basic UI
     public GameObject FirstStartUI;
@@ -40,11 +46,10 @@ public class UIManager : MonoBehaviour
     public Button UnderBar_Button;
     public Button X_Button;
 
-    // Manger
-    private StatusManager statusManager;
-    private FolderManager folderManager;
+    #endregion
 
-    // Test - 기능모듈화
+    #region UI Instance Element
+
     public enum UI
     {
         UI_MyPC, UI_DownLoad, UI_MyDocument, UI_LocalDisk, UI_NetWork, UI_Control, UI_Help
@@ -61,6 +66,10 @@ public class UIManager : MonoBehaviour
     private UI_7_Help ui_7_Help = null;
     private UI_8_ProgramInstall ui_8_ProgramInstall = null;
 
+    #endregion
+
+    #region Default Function
+
     private void Awake()
     {
         if (null == instance)
@@ -73,6 +82,7 @@ public class UIManager : MonoBehaviour
             Destroy(this.gameObject);
         }
     }
+
     public static UIManager Instance
     {
         get
@@ -84,6 +94,7 @@ public class UIManager : MonoBehaviour
             return instance;
         }
     }
+
     void Start()
     {
         statusManager = StatusManager.Instance;
@@ -103,8 +114,8 @@ public class UIManager : MonoBehaviour
         Desktop_Button.onClick.AddListener(FDesktop_Button);
 
         // Top Button Setting
-        UnderBar_Button.onClick.AddListener(CloseWindowUI);
-        X_Button.onClick.AddListener(CloseWindowUI);
+        UnderBar_Button.onClick.AddListener(WindowUISetActive);
+        X_Button.onClick.AddListener(WindowUISetActive);
 
         // Basic UI Setting
         ReStartButton.onClick.AddListener(FReStartButton);
@@ -126,11 +137,13 @@ public class UIManager : MonoBehaviour
         if (!ui_8_ProgramInstall.isESCDisabled && folderManager.CurrentFolder.IsCleared && Input.GetKeyDown(KeyCode.Escape))
         {
             WindowUISetActive();
-
         }
     }
 
-    // ================ UI 모듈화 ================
+    #endregion
+
+    #region Open/Close Window UI Function
+
     private void CloseAllUI()
     {
         ui_1_MyPC.CloseUI();
@@ -203,15 +216,16 @@ public class UIManager : MonoBehaviour
                 ui_2_DownLoad.GenerateProgramList();
                 ui_3_MyDocument.GenerateItemList();
                 ui_3_MyDocument.UpdateStorage();
-
+                ui_4_LocalDisk.UpdateNodeUIStates();
                 OpenWindowUI();
             }
         }
     }
 
-    // ================ UI 모듈화 ================
+    #endregion
 
-    // ================ Start, End, GameOver Section ================
+    #region Start, End, GameOver UI
+
     public void PlayerIsDead()
     {
         Time.timeScale = 0;
@@ -253,8 +267,10 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.ResetPlayTime();
     }
 
+    #endregion
 
-    // Button OnClickFuction
+    #region Button OnClick Function
+
     public void FMyPC_Button()
     {
         CloseAllUI();
@@ -326,9 +342,5 @@ public class UIManager : MonoBehaviour
 #endif
     }
 
-    // ================ HP UI Section ================
-    // Fixed
-
-    // HP UI Activation Setting
-
+    #endregion
 }

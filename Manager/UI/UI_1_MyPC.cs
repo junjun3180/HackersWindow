@@ -62,12 +62,6 @@ public class UI_1_MyPC : MonoBehaviour
         poolingManager = PoolingManager.Instance;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void OpenUI()
     {
         if(UI_W_MyPC != null)

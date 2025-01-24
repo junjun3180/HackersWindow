@@ -41,18 +41,6 @@ public class UI_7_Help : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void OpenUI()
     {
         if (UI_W_Help != null)

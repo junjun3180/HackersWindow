@@ -5,10 +5,20 @@ using UnityEngine.UI;
 
 public class UI_8_ProgramInstall : MonoBehaviour
 {
+    #region Manager
     private static UI_8_ProgramInstall instance = null;
 
     // UI Window
     public GameObject UI_W_ProgramInstall = null;
+
+    // Manager
+    private UI_0_HUD ui_0_HUD = null;
+    private StatusManager statusManager = null;
+    private PoolingManager poolingManager = null;
+
+    #endregion
+
+    #region Definition
 
     // Detail
     public Animator OP_ED_animator;
@@ -44,11 +54,9 @@ public class UI_8_ProgramInstall : MonoBehaviour
 
     public int CurrentUIIndex;
 
+    #endregion
 
-    // Manager
-    private UI_0_HUD ui_0_HUD = null;
-    private StatusManager statusManager = null;
-    private PoolingManager poolingManager = null;
+    #region Default Function
 
     public static UI_8_ProgramInstall Instance
     {
@@ -106,11 +114,9 @@ public class UI_8_ProgramInstall : MonoBehaviour
         OP_ED_animator.updateMode = AnimatorUpdateMode.UnscaledTime;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    #endregion
 
-    }
+    #region Open/Close UI
 
     public void OpenUI()
     {
@@ -130,6 +136,10 @@ public class UI_8_ProgramInstall : MonoBehaviour
             // Debug.Log("CloseUI : UI_1_MyPC");
         }
     }
+
+    #endregion
+
+    #region Program Install UI Function
 
     private void ProgramInstallUI(int index)
     {
@@ -258,4 +268,5 @@ public class UI_8_ProgramInstall : MonoBehaviour
         DownLoadUI0.SetActive(true);
     }
 
+    #endregion
 }

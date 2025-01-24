@@ -5,9 +5,16 @@ using UnityEngine;
 
 public class StatusManager : MonoBehaviour
 {
+    #region Manager
+
     public static StatusManager Instance;
+    private FolderManager folderManager;
     private UIManager uiManager;
     private UI_0_HUD ui_0_HUD;
+
+    #endregion
+
+    #region Player Base Status
 
     // When game is started, this base status used to Initializing Status based on this list.
     [Header("Player Base Status")]
@@ -17,7 +24,7 @@ public class StatusManager : MonoBehaviour
     public float B_Shield;
     public float B_ShieldHp;
     public float B_Elect;
-    private float B_HealCoolTime = 0.2f; // Playher Heal CoolTime
+    public float B_HealCoolTime = 0.2f; // Playher Heal CoolTime
     private float B_HitCoolTime = 2.0f; // Player Attacked CoolTime
 
     // Player Attack Status
@@ -35,6 +42,10 @@ public class StatusManager : MonoBehaviour
     public int B_CurrentStorage;
     public int B_MaxStorage;
 
+    #endregion
+
+    #region Dynamic Status
+
     // When player in game, playing with this status
     // This status are no need to reset.
     [Header("Player Dynamic Status")]
@@ -44,9 +55,14 @@ public class StatusManager : MonoBehaviour
     public float Shield; // 공격 막아주는 것
     public float ShieldHp;
     public float Elect;
+    public bool HPisFull = false;
+
     public MonsterBase.MonsterType DeathSign; // 사망원인
-    private float HealCoolTime;
+    public float HealCoolTime;
+
     private Coroutine healing_coroutine;
+    private Coroutine TempHealing_coroutine;
+
     private float HitCoolTime;
     private bool IsHit = false;
 
@@ -63,12 +79,22 @@ public class StatusManager : MonoBehaviour
     public int CurrentStorage;
     public int MaxStorage;
 
+    #endregion
+
+    #region Item
+
     [Header("Item Drop Physical Force")]
-    public float DragForce;   
+    public float DragForce;
     public float DropForce;
     public float AbsorptionSpeed;
     public float GetDistance;
     public float MaxDistance;
+
+    [Header("Item Effect")]
+    public float ElectValue;
+    #endregion
+
+    #region Default / Init Function
 
     void Awake()
     {
@@ -87,6 +113,7 @@ public class StatusManager : MonoBehaviour
     {
         uiManager = UIManager.Instance;
         ui_0_HUD = UI_0_HUD.Instance;
+        folderManager = FolderManager.Instance;
         InitializeStatus();
     }
 
@@ -115,12 +142,15 @@ public class StatusManager : MonoBehaviour
         MaxStorage = B_MaxStorage;
     }
 
-    // =============================== Fixed Section ===============================
+    #endregion
+
+    #region Damage Logic
+
     public void TakeDamage(float damage, MonsterBase.MonsterType deathSign)
     {
         if (!IsHit)
         {
-            // Debug.Log("Player Take Damage");
+            Debug.Log("Player Take Damage");
             DeathSign = deathSign;
             StartCoroutine(Hit_Coroutine(damage));
         }
@@ -129,15 +159,12 @@ public class StatusManager : MonoBehaviour
     private IEnumerator Hit_Coroutine(float damage)
     {
         IsHit = true;
-        if (ShieldHp > 0)
-        {
-            ShieldHp -= damage;
-            ui_0_HUD.ShiledSet();
 
-            if (ShieldHp <= 0)
-            {
-                ShieldHp = 0;
-            }
+        if ((int)Shield > 0)
+        {
+            Debug.Log("쉴드 배터리 폭팔");
+            Shield--;   // 쉴드 개수 하나 줄이고
+            ui_0_HUD.ShiledSet(); // HP에 쉴드 셋팅
 
             yield return new WaitForSeconds(HitCoolTime);
             IsHit = false;
@@ -146,8 +173,10 @@ public class StatusManager : MonoBehaviour
 
         if (Elect > 0)
         {
+            Debug.Log("전기 배터리 폭팔");
             Elect -= damage;
-            ui_0_HUD.ElectDel();
+            ui_0_HUD.ExceptHp_BarSet();
+            ui_0_HUD.UpdateHpUI();
 
             if (Elect <= 0)
             {
@@ -162,40 +191,20 @@ public class StatusManager : MonoBehaviour
 
         if (TemHp > 0)
         {
+            Debug.Log("임시 체력 소모");
             TemHp -= damage;
-            ui_0_HUD.HpSet();
-
-            if (TemHp <= 0)
-            {
-                ui_0_HUD.TemHpDel();
-                TemHp = 0;
-            }
+            ui_0_HUD.ExceptHp_BarSet();
+            ui_0_HUD.UpdateHpUI();
 
             yield return new WaitForSeconds(HitCoolTime);
             IsHit = false;
             yield break;
         }
 
-        if (Shield > 0 && Shield * 3 >= CurrentHp)
+        if (ShieldHp > 0 || CurrentHp > 0)
         {
-            Shield -= 1;
-            ui_0_HUD.ShiledOff();
-
-            if (Shield <= 0)
-            {
-                Shield = 0;
-            }
-
-            yield return new WaitForSeconds(HitCoolTime);
-            IsHit = false;
-            yield break;
-        }
-
-
-        if (CurrentHp > 0)
-        {
-            CurrentHp -= damage;
-            ui_0_HUD.HpSet();
+            Debug.Log("HP + 쉴드 소모");
+            ui_0_HUD.DamagedHP();
 
             if (CurrentHp <= 0)
             {
@@ -203,10 +212,21 @@ public class StatusManager : MonoBehaviour
             }
 
             yield return new WaitForSeconds(HitCoolTime);
+            IsHit = false;
+            yield break;
         }
 
         IsHit = false;
     }
+
+    private void Die()
+    {
+        uiManager.PlayerIsDead();
+    }
+
+    #endregion
+
+    #region ItmeEffects
 
     public void SetSpeed(float newSpeed)
     {
@@ -221,17 +241,40 @@ public class StatusManager : MonoBehaviour
     public void ElectUp(int electNum)
     {
         Elect += electNum;
+        ui_0_HUD.ExceptHp_BarSet();
+        ui_0_HUD.UpdateHpUI();
     }
 
     public void ShieldHpUp(int shieldNum)
     {
-        ShieldHp += shieldNum;
+        Shield += shieldNum;
+        ui_0_HUD.ExceptHp_BarSet();
+        ui_0_HUD.UpdateHpUI();
     }
 
     public void TemHpUp(int temHpNum)
     {
-        TemHp += temHpNum;
-        ui_0_HUD.TemHpSet();
+        if (TempHealing_coroutine != null)
+        {
+            StopCoroutine(TemHpCoroutine(temHpNum));
+        }
+        TempHealing_coroutine = StartCoroutine(TemHpCoroutine(temHpNum));
+
+        Debug.Log("TempHP+");
+    }
+
+    private IEnumerator TemHpCoroutine(int temHpNum)
+    {
+        for (int i = 0; i < temHpNum; i++)
+        {
+            TemHp++;
+            ui_0_HUD.ExceptHp_BarSet();
+            ui_0_HUD.UpdateHpUI();
+            yield return new WaitForSeconds(HealCoolTime);
+        }
+        TempHealing_coroutine = null;
+
+        HPisFull = false;
     }
 
     public void Heal(int healNum)
@@ -254,24 +297,28 @@ public class StatusManager : MonoBehaviour
                 CurrentHp += 1;
                 CurrentHp = Mathf.Min(CurrentHp, MaxHp);
             }
+            ui_0_HUD.UpdateHpUI();
             yield return new WaitForSeconds(HealCoolTime);
         }
-
         healing_coroutine = null;
-    }
 
-    private void Die()
-    {
-        uiManager.PlayerIsDead();
+        HPisFull = false;
     }
 
     public void ElectShieldExplode()
     {
-        Debug.Log("ElectShieldExplode Is Not Defined");
+        List<MonsterBase> monsterList = folderManager?.CurrentFolder.FindAndReturnMonster();
+        foreach (MonsterBase monster in monsterList)
+        {
+            monster.Damaged(ElectValue);
+        }
     }
 
     public void MaxStorageUp(int Value)
     {
         MaxStorage += Value;
     }
+
+    #endregion
+
 }

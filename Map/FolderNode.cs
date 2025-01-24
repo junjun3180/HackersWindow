@@ -1,14 +1,20 @@
+using Cinemachine;
 using System.Collections.Generic;
+using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class FolderNode : MonoBehaviour
 {
+    #region Definition
+
     [Header("폴더 기본정보")]
     public GameObject CurrentFolder;
     public string FolderName; // 폴더 이름
     public FolderNode Parent; // 부모 폴더
     public List<FolderNode> Children; // 자식 폴더들 (최대 3개)
     public bool isDetectionDone = false;
+    public List<MonsterBase> monsters = new List<MonsterBase>();
 
     public enum FolderType
     {
@@ -35,6 +41,13 @@ public class FolderNode : MonoBehaviour
     [Header("오른쪽 포탈 리스트")]
     public Portal[] Portals; // 오른쪽 포탈 리스트
 
+    // 카메라
+    public CinemachineVirtualCamera mapCamera;
+
+    #endregion
+
+    #region Default function
+
     private void Awake()
     {
         Children = new List<FolderNode>(); // 자식 폴더 초기화
@@ -43,6 +56,10 @@ public class FolderNode : MonoBehaviour
     {
         nowPosition = transform.position.x;
     }
+
+    #endregion
+
+    #region Setting FolderNode Connection
 
     // 부모 폴더를 설정
     public void SetParent(FolderNode parent)
@@ -62,12 +79,15 @@ public class FolderNode : MonoBehaviour
         return true;
     }
 
+    #endregion
+
+    #region Activation FolderNodeElement
     // 현재 폴더를 활성화
     public void SetFolderActive()
     {
         if (CurrentFolder == null) return;
 
-        Debug.Log("SetFolderActive");
+        // Debug.Log("SetFolderActive");
         CurrentFolder.SetActive(true);
     }
 
@@ -134,6 +154,10 @@ public class FolderNode : MonoBehaviour
         ActivePortal();
     }
 
+    #endregion
+
+    #region Related to Monsters
+
     // 몬스터 처치 시 호출
     public void ChangeMonsterCount()
     {
@@ -151,4 +175,24 @@ public class FolderNode : MonoBehaviour
         return MonsterCount;
     }
 
+    public List<MonsterBase> FindAndReturnMonster()
+    {
+        // 자식 오브젝트들 순회
+        foreach (Transform child in transform)
+        {
+            // 자식 오브젝트에 MonsterBase 컴포넌트가 있는지 확인
+            MonsterBase monster = child.GetComponent<MonsterBase>();
+
+            // MonsterBase 타입이 있을 경우 리스트에 추가
+            if (monster != null)
+            {
+                monsters.Add(monster);
+            }
+        }
+
+        return monsters;
+    }
+
+
+    #endregion
 }

@@ -3,26 +3,48 @@ using UnityEngine.EventSystems;
 
 public class Weapon : MonoBehaviour
 {
+    #region Variables
+
     private GameObject[] bulletList;
     private Transform firePoint;
-    public float attackSpeed;
     private float nextFireTime = 0f;
+
     public enum WeaponType
     {
         BasicWeapon
     }
+
     public WeaponType weaponType;
+
+    #endregion
+
+    #region Manager
+
+    private SpecialAttack specialAttack;
+    private StatusManager statusManager;
+    private PoolingManager poolingManager;
+    private SoundManager soundManager;
+
+    #endregion
+
+    #region Default Function
+
     // Start is called before the first frame update
     void Start()
     {
         weaponType = WeaponType.BasicWeapon;
         firePoint = gameObject.transform;
+
+        specialAttack = SpecialAttack.Instance;
+        statusManager = StatusManager.Instance;
+        poolingManager = PoolingManager.Instance;
+        soundManager = SoundManager.Instance;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButton(0)) // 왼쪽 마우스 버튼 클릭 감지
+        if (!(specialAttack?.GetAttackMode() ?? false) && Input.GetMouseButton(0)) // 왼쪽 마우스 버튼 클릭 감지
         {
             if (EventSystem.current.IsPointerOverGameObject())
             {
@@ -34,11 +56,25 @@ public class Weapon : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Fire
+
+    private void TryFire()
+    {
+        float attackInterval = 1f / (statusManager?.AttackSpeed ?? 1.0f);
+
+        if (Time.time >= nextFireTime)
+        {
+            Fire();
+            soundManager?.PlayerFireSound();
+            nextFireTime = Time.time + attackInterval; // 다음 공격 가능한 시간 업데이트
+        }
+    }
+
     public void Fire()
     {
-        // Debug.Log("Fire");
-        PoolingManager poolingManager = PoolingManager.Instance;
-        if (poolingManager.bulletPool.Count > 0)
+        if (poolingManager?.bulletPool.Count > 0)
         {
             Bullet bullet = poolingManager.bulletPool.Dequeue();
 
@@ -60,29 +96,7 @@ public class Weapon : MonoBehaviour
             }
         }
     }
-    private void TryFire()
-    {
-        float attackInterval = 1f / StatusManager.Instance.AttackSpeed;
 
-        if (Time.time >= nextFireTime)
-        {
-            Fire();
-            SoundManager.Instance.PlayerFireSound();
-            nextFireTime = Time.time + attackInterval; // 다음 공격 가능한 시간 업데이트
-        }
-    }
-
-    public void SetAttackSpeed(float speed)
-    {
-        // Debug.Log("ChangeSpeed");
-        attackSpeed += speed;
-
-        if (attackSpeed < 0.1f)
-        {
-            attackSpeed = 0.1f;
-        }
-
-        // Debug.Log("Attack Speed set to: " + attackSpeed);
-    }
+    #endregion
 
 }

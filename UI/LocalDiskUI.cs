@@ -11,21 +11,10 @@ public class LocalDiskUI : MonoBehaviour
     private void Awake()
     {
         ui_4_LocalDisk = UI_4_LocalDisk.Instance;
-        // telManger = TeleportManager.Instance;
     }
-
-    // Update is called once per frame
  
-    private void OnEnable()
-    {
-        // ui_4_LocalDisk.RoomUISet();
-    }
-    private void OnDisable()
-    {
-        // telManger.LocalDisckTel(telMap);
-    }
     public void LocalDiskTel()
     {
-        // ui_4_LocalDisk.SetWindowUI();
+
     }
 }

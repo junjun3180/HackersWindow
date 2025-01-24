@@ -68,12 +68,6 @@ public class UI_2_DownLoad : MonoBehaviour
         ProgramDeleteButton.onClick.AddListener(FDelete_Button);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OpenUI()
     {
         if (UI_W_DownLoad != null)
