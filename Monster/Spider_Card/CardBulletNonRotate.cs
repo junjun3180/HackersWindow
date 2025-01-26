@@ -4,19 +4,22 @@ using UnityEngine;
 
 public class CardBulletNonRotate : MonoBehaviour
 {
+    #region Variable Element
+
     public float BulletPower = 1;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+
+    #endregion
+
+    #region Trigger Event
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
-            StatusManager.Instance.TakeDamage(BulletPower, MonsterBase.MonsterType.M_CardPack);
+            StatusManager.Instance.TakeDamage(BulletPower, MonsterType.M_CardPack);
             gameObject.SetActive(false); // ÆÄ±«
         }
     }
+
+    #endregion
 }

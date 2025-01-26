@@ -46,7 +46,6 @@ public class SpecialAttack : MonoBehaviour
         }
     }
 
-
     private void Awake()
     {
         if (instance != null && instance != this)

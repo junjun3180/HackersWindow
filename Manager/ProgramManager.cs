@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -51,8 +50,9 @@ public class ProgramManager : MonoBehaviour
     private void Start()
     {
         PInstance = PoolingManager.Instance;
-        statusManager = new StatusManager();
+        statusManager = StatusManager.Instance;
     }
+
     private void OnDisable()
     {
         if (bulletMa != null)

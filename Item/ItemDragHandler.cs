@@ -108,7 +108,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         return RectTransformUtility.RectangleContainsScreenPoint(uiRect, pointerPosition, null);
     }
 
-    private Sprite GetItemSprite(Item.ItemType itemType)
+    private Sprite GetItemSprite(ItemType itemType)
     {
         string spriteSheetName = itemManager.GetSpriteSheetName(itemType);
         int spriteIndex = itemManager.GetImageIndex(itemType);

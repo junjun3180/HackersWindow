@@ -1,23 +1,22 @@
-using Cinemachine;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.WSA;
 
 public class FolderManager : MonoBehaviour
 {
     #region Manager
+
     // 싱글톤 인스턴스
     private static FolderManager instance = null;
 
-    private UI_0_HUD ui_0_HUD; // HUD를 갱신하기 위한 참조
+    private UI_0_HUD ui_0_HUD;
     private UI_4_LocalDisk localDiskUI;
+    private CameraManager cameraManager;
 
     #endregion
 
     #region Definition
 
     public GameObject Player; // 캐릭터 위치
-    public List<FolderNode> AllFolders = new List<FolderNode>(); // 모든 폴더 리스트
     public List<GameObject> specialFolderList = new List<GameObject>(); // 스페셜 폴더 리스트
     public FolderNode previousFolder; // 이전 폴더
     public FolderNode CurrentFolder; // 현재 폴더
@@ -28,9 +27,6 @@ public class FolderManager : MonoBehaviour
     [Header("Portal")]
     public Portal PreviousPortal = null;
 
-    // Camera
-    [SerializeField] private CinemachineVirtualCamera camera;
-    CameraManager cameraManager;
     #endregion
 
     #region Base Function
@@ -73,16 +69,18 @@ public class FolderManager : MonoBehaviour
             }
         }
 
-
         ui_0_HUD = UI_0_HUD.Instance;
         localDiskUI = UI_4_LocalDisk.Instance;
         cameraManager = CameraManager.Instance;
+
         // 맵 생성 시작
         GenerateMap();
 
         AllFolderDeActivate();
 
         SetCurrentFolder(CurrentFolder);
+
+        cameraManager.SetCameraFromFolderNode();
 
         if (localDiskUI != null && rootFolder != null)
         {
@@ -91,6 +89,8 @@ public class FolderManager : MonoBehaviour
     }
 
     #endregion
+
+    #region Generate Map
 
     // 맵 생성 시작
     public void GenerateMap()
@@ -108,6 +108,8 @@ public class FolderManager : MonoBehaviour
         CurrentFolder = rootFolder; // 루트 폴더를 현재 폴더로 설정
     }
 
+    #endregion
+
     #region Current Folder Setting, Getting Info
 
     // 현재 폴더 설정
@@ -120,44 +122,24 @@ public class FolderManager : MonoBehaviour
 
         // HUD 업데이트
         SetMonsterCount(folder);
-        // Debug.Log($"Current MonsterCount: {CurrentFolderMonsterCount}");
         ui_0_HUD.UpdateHUD();
 
         // 클리어 여부와 몬스터 수를 확인 후 포탈을 활성화 
         CurrentFolder.DeActivePortal();
         CurrentFolder.CheckCurrentFolder(); 
-        // Debug.Log($"Current folder set to: {CurrentFolder.FolderName}");
 
         // 현재 폴더를 발견 상태로 만듦.
         CurrentFolder.isDetectionDone = true;
 
         // 연결된 폴더도 모두 발견 상태로 만듦.
-        if (CurrentFolder == null)
-        {
-            Debug.LogError("CurrentFolder is null");
-            return;
-        }
-
-        if (CurrentFolder.Portals == null)
-        {
-            Debug.LogError("CurrentFolder.Portals is null");
-            return;
-        }
+        if (CurrentFolder == null) return;
+        if (CurrentFolder.Portals == null) return;
 
         foreach (Portal portal in CurrentFolder.Portals)
         {
-            if (portal == null)
-            {
-                Debug.LogWarning("Portal is null.");
-                continue;
-            }
-
-            if (portal.ConnectedFolder == null)
-            {
-                Debug.LogWarning($"Portal {portal.name} does not have a connected folder.");
-                continue;
-            }
-
+            if (portal == null) continue;
+            if (portal.ConnectedFolder == null) continue;
+            
             portal.ConnectedFolder.isDetectionDone = true;
         }
     }
@@ -171,26 +153,14 @@ public class FolderManager : MonoBehaviour
     // 폴더 이동
     public void MoveToFolder(FolderNode folder)
     {
-        Debug.Log("MoveToFolder");
+        // Debug.Log("MoveToFolder");
         if (folder == null) return;
 
         folder.SetFolderActive();
         CurrentFolder.SetFolderDeActive();
 
         SetCurrentFolder(folder);
-
-        if(folder.Type == FolderNode.FolderType.RandomSpecial)
-        {
-            // camera.m_Lens.OrthographicSize = 8.0f;
-            cameraManager.switcherCamera(folder.mapCamera);
-        }
-        else
-        {
-            // camera.m_Lens.OrthographicSize = 5.77f;
-            cameraManager.switchPrimaryCamera();
-        }
-
-        cameraManager.SetCollider();
+        cameraManager.SetCameraFromFolderNode();
     }
 
     // 상위 폴더로 이동(왼쪽 포탈)
@@ -254,9 +224,9 @@ public class FolderManager : MonoBehaviour
         {
             Vector3 newPosition;
 
-            if (CurrentFolder.Type == FolderNode.FolderType.RandomSpecial 
-                || CurrentFolder.Type == FolderNode.FolderType.Download 
-                || CurrentFolder.Type == FolderNode.FolderType.Shop )
+            if (CurrentFolder.Type == FolderType.RandomSpecial 
+                || CurrentFolder.Type == FolderType.Download 
+                || CurrentFolder.Type == FolderType.Shop )
             {
                 // 특수 방: Y축만 0.5 위로 조정
                 newPosition = DestinationFolder.Left_Portal.transform.position;
@@ -287,7 +257,13 @@ public class FolderManager : MonoBehaviour
             if (folder.FolderName == Name)
             {
                 Debug.Log("Find");
-                previousFolder = CurrentFolder;
+
+                if (CurrentFolder.Type != FolderType.Hidden)
+                {
+                    Debug.Log("before folder is not hidden");
+                    previousFolder = CurrentFolder;
+                }
+
                 folder.Left_Portal.ConnectedFolder = previousFolder;
                 Player.transform.position = folder.transform.Find("TeleportPoint").position;
                 MoveToFolder(folder);
@@ -304,6 +280,86 @@ public class FolderManager : MonoBehaviour
 
         Player.transform.position = folder.transform.Find("TeleportPoint").position;
         MoveToFolder(folder);
+    }
+
+    public void MoveToSpecificFolder(string folderName)
+    {
+        Debug.Log($"Attempting to move to folder: {folderName}");
+
+        FolderNode targetFolder = FindFolderByName(rootFolder, folderName);
+
+        if (targetFolder == null)
+        {
+            Debug.LogError($"Folder with name '{folderName}' not found.");
+            return;
+        }
+
+        MoveToFolder(targetFolder);
+
+        Player.transform.position = targetFolder.transform.Find("TeleportPoint").position;
+    }
+
+    public void MoveToFolderByType(FolderType folderType)
+    {
+        FolderNode targetFolder = FindFolderByType(rootFolder, folderType);
+
+        if (targetFolder == null)
+        {
+            Debug.LogError($"Folder of type '{folderType}' not found.");
+            return;
+        }
+
+        // Move to the found folder
+        MoveToFolder(targetFolder);
+
+        Player.transform.position = targetFolder.transform.Find("TeleportPoint").position;
+    }
+
+
+    private FolderNode FindFolderByName(FolderNode root, string folderName)
+    {
+        if (root == null) return null;
+
+        // Check if the current folder matches the name
+        if (root.FolderName == folderName)
+        {
+            return root;
+        }
+
+        // Recursively search in children
+        foreach (var child in root.Children)
+        {
+            var result = FindFolderByName(child, folderName);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null; // Folder not found
+    }
+
+    private FolderNode FindFolderByType(FolderNode root, FolderType folderType)
+    {
+        if (root == null) return null;
+
+        // Check if the current folder matches the specified type
+        if (root.Type == folderType)
+        {
+            return root;
+        }
+
+        // Recursively search in child folders
+        foreach (var child in root.Children)
+        {
+            var result = FindFolderByType(child, folderType);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null; // Folder of the specified type not found
     }
 
     #endregion
@@ -332,6 +388,8 @@ public class FolderManager : MonoBehaviour
 
     #endregion
 
+    #region Portal Reset
+
     // 현재 맵의 포탈을 모두 초기화해주는 함수
     public void ResetCurrentPortal()
     {
@@ -343,7 +401,9 @@ public class FolderManager : MonoBehaviour
             portal.isMoving = false;
         }
     }
-    
+
+    #endregion
+
     #region Monster
 
     // 맵 입장시 지정된 몬스터 개수를 불러옴
@@ -358,7 +418,6 @@ public class FolderManager : MonoBehaviour
         CurrentFolderMonsterCount += value;
         CurrentFolder.ChangeMonsterCount();
         ui_0_HUD.UpdateHUD();
-        // Debug.Log($"Current MonsterCount: {CurrentFolderMonsterCount}");
         CheckMonsterCount();
     }
 
@@ -374,6 +433,5 @@ public class FolderManager : MonoBehaviour
     }
 
     #endregion
-
 
 }

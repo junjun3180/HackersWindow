@@ -1,7 +1,5 @@
 using Cinemachine;
 using System.Collections.Generic;
-using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class FolderNode : MonoBehaviour
@@ -15,19 +13,6 @@ public class FolderNode : MonoBehaviour
     public List<FolderNode> Children; // 자식 폴더들 (최대 3개)
     public bool isDetectionDone = false;
     public List<MonsterBase> monsters = new List<MonsterBase>();
-
-    public enum FolderType
-    {
-        Start,           // 시작 지점
-        Boss,            // 보스 폴더
-        Shop,            // 상점 폴더
-        Download,        // 다운로드 폴더
-        RandomSpecial,   // 랜덤 특수 폴더
-        Hidden,          // 숨겨진 폴더 (특정 조건에서만 진입 가능)
-        Middle,          // 일반 폴더 (노멀 폴더)
-        End,             // 엔드포인트 폴더 (오른쪽 포탈 없음)
-        MiddleBoss       // 중간 보스 폴더
-    }
 
     public FolderType Type; // 현재 폴더 타입
 

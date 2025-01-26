@@ -79,7 +79,7 @@ public class Portal : MonoBehaviour
             isLocking = false;
             StartCoroutine(DelayAfterPortalActive(1.5f));
         }
-        else if (folderManager.CurrentFolder.Type == FolderNode.FolderType.Hidden)
+        else if (folderManager.CurrentFolder.Type == FolderType.Hidden)
         {
             // 히든 맵의 경우 별도의 이동 함수를 사용
             Debug.Log("Hidden Folder Portal Enter");
@@ -182,7 +182,7 @@ public class Portal : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         // 지연 후 실행할 함수 호출
-        Debug.Log("DelayAfterPortalActive");
+        // Debug.Log("DelayAfterPortalActive");
         isMoving = false;
 
         if (folderManager.PreviousPortal != null)
@@ -197,6 +197,8 @@ public class Portal : MonoBehaviour
 
     #endregion
 
+    #region Player Move
+
     // 플레이어 위치를 이동시킨다.
     // 포탈 방향에 따라 이동시킴(Left, Right)
     public void MovePlayerToConnectedFolder()
@@ -207,13 +209,13 @@ public class Portal : MonoBehaviour
 
         if (Direction == PortalDirection.Left)
         {
-            Debug.Log("Left");
+            // Debug.Log("Left");
             ConnectedFolder.Portals[ParentPortalIndex].isMoving = true;
             folderManager.MoveToPreviousFolder(ParentPortalIndex, this);
         }
         else
         {
-            Debug.Log("Right");
+            // Debug.Log("Right");
             ConnectedFolder.Left_Portal.isMoving = true;
             folderManager.MoveToNextFolder(PortalIndex, this);
         }
@@ -227,6 +229,8 @@ public class Portal : MonoBehaviour
 
         folderManager.MoveHiddenToPre(ConnectedFolder);
     }
+
+    #endregion
 
     // 포탈 연결용 함수
     // 맵 생성기에서 사용
@@ -242,6 +246,8 @@ public class Portal : MonoBehaviour
     //{
     //    ConnectedFolder = folderManager.previousFolder;
     //}
+
+    #region Animation
 
     // 애니메이터에서 문을 열어주는 이벤트 실행기
     public void SetClearTrigger()
@@ -269,11 +275,13 @@ public class Portal : MonoBehaviour
         isActive = false;
         if (animator != null && ConnectedFolder.IsCleared == false)
         {
-            if (ConnectedFolder.Type == FolderNode.FolderType.Shop ||
-            ConnectedFolder.Type == FolderNode.FolderType.Download)
+            if (ConnectedFolder.Type == FolderType.Shop ||
+            ConnectedFolder.Type == FolderType.Download)
             {
                 animator.SetTrigger("NotClear");
             }
         }
     }
+
+    #endregion
 }

@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using static Unity.VisualScripting.Metadata;
 
 public class FolderGenerator : MonoBehaviour
 {
@@ -25,10 +22,10 @@ public class FolderGenerator : MonoBehaviour
     public List<GameObject> SpecialFolderPrefabs;
     public List<GameObject> EndFolderPrefabs;
     public List<GameObject> HiddenFolderPrefabs;
+    public GameObject SqualoMarketPrefab;
 
-    private List<FolderNode> spawnedFolders = new List<FolderNode>();
+    [Header("Generated Map Ojbect")]
     private FolderNode rootFolder;
-
     public List<GameObject> hiddenFolderList = new List<GameObject>();
 
     [Header("Portal Prefabs")]
@@ -192,39 +189,39 @@ public class FolderGenerator : MonoBehaviour
 
     public FolderNode GetRootNode() { return rootFolder; }
 
-    private FolderNode InstantiateNode(FolderNode node, Vector2 position, FolderNode parent, GameObject customPrefab = null)
-    {
-        // 선택된 프리팹 사용
-        GameObject prefab = customPrefab ?? GetPrefabForFolderType(node.Type);
-        GameObject folderObject = Instantiate(prefab, position, Quaternion.identity);
-        FolderNode instantiatedNode = folderObject.GetComponent<FolderNode>();
+    //private FolderNode InstantiateNode(FolderNode node, Vector2 position, FolderNode parent, GameObject customPrefab = null)
+    //{
+    //    // 선택된 프리팹 사용
+    //    GameObject prefab = customPrefab ?? GetPrefabForFolderType(node.Type);
+    //    GameObject folderObject = Instantiate(prefab, position, Quaternion.identity);
+    //    FolderNode instantiatedNode = folderObject.GetComponent<FolderNode>();
 
-        instantiatedNode.Type = node.Type;
-        instantiatedNode.FolderName = node.FolderName;
+    //    instantiatedNode.Type = node.Type;
+    //    instantiatedNode.FolderName = node.FolderName;
 
-        if (parent != null)
-        {
-            parent.AddChild(instantiatedNode);
-        }
+    //    if (parent != null)
+    //    {
+    //        parent.AddChild(instantiatedNode);
+    //    }
 
-        spawnedFolders.Add(instantiatedNode);
+    //    spawnedFolders.Add(instantiatedNode);
 
-        float childOffset = -VerticalSpacing;
-        foreach (var child in node.Children)
-        {
-            Vector2 childPosition = position + new Vector2(HorizontalSpacing, childOffset);
-            InstantiateNode(child, childPosition, instantiatedNode);
-            childOffset -= VerticalSpacing;
-        }
+    //    float childOffset = -VerticalSpacing;
+    //    foreach (var child in node.Children)
+    //    {
+    //        Vector2 childPosition = position + new Vector2(HorizontalSpacing, childOffset);
+    //        InstantiateNode(child, childPosition, instantiatedNode);
+    //        childOffset -= VerticalSpacing;
+    //    }
 
-        return instantiatedNode;
-    }
+    //    return instantiatedNode;
+    //}
 
-    private GameObject GetPrefabForFolderType(FolderNode.FolderType type, int childCount = 0)
+    private GameObject GetPrefabForFolderType(FolderType type, int childCount = 0)
     {
         switch (type)
         {
-            case FolderNode.FolderType.Middle:
+            case FolderType.Middle:
                 if (childCount == 1)
                     return NormalFolderPrefabs1[UnityEngine.Random.Range(0, NormalFolderPrefabs1.Count)];
                 else if (childCount == 2)
@@ -233,19 +230,19 @@ public class FolderGenerator : MonoBehaviour
                     return NormalFolderPrefabs3[UnityEngine.Random.Range(0, NormalFolderPrefabs3.Count)];
                 else
                     return null;
-            case FolderNode.FolderType.Download:
+            case FolderType.Download:
                 return DownloadFolderPrefabs[UnityEngine.Random.Range(0, DownloadFolderPrefabs.Count)];
 
-            case FolderNode.FolderType.Shop:
+            case FolderType.Shop:
                 return ShopFolderPrefabs[UnityEngine.Random.Range(0, ShopFolderPrefabs.Count)];
 
-            case FolderNode.FolderType.Boss:
+            case FolderType.Boss:
                 return BossFolderPrefabs[UnityEngine.Random.Range(0, BossFolderPrefabs.Count)];
 
-            case FolderNode.FolderType.End:
+            case FolderType.End:
                 return EndFolderPrefabs[UnityEngine.Random.Range(0, EndFolderPrefabs.Count)];
 
-            case FolderNode.FolderType.RandomSpecial:
+            case FolderType.RandomSpecial:
                 if (SpecialFolderPrefabs.Count == 0) // 리스트 비었을 경우 예외처리
                 {
                     Debug.LogError("SpecialFolderPrefabs list is empty!");
@@ -271,7 +268,12 @@ public class FolderGenerator : MonoBehaviour
             newmap.transform.SetParent(this.transform);
             hiddenFolderList.Add(newmap);
         }
+        GameObject squaloMarket = Instantiate(SqualoMarketPrefab, Vector3.zero, Quaternion.identity);
+        squaloMarket.SetActive(false);
+        squaloMarket.transform.SetParent(this.transform);
+        hiddenFolderList.Add(squaloMarket);
     }
+
 
     #endregion
 
@@ -313,7 +315,7 @@ public class FolderGenerator : MonoBehaviour
 
 
             // 연결된 자식 폴더 타입에 따라 포탈 프리펩 변경
-            if (childNode.Type != FolderNode.FolderType.Middle)
+            if (childNode.Type != FolderType.Middle)
             {
                 GameObject newPortalPrefab = GetPortalPrefabsForFolderType(childNode);
                 if (newPortalPrefab != null)
@@ -361,13 +363,13 @@ public class FolderGenerator : MonoBehaviour
     {
         switch (node.Type)
         {
-            case FolderNode.FolderType.Boss:
+            case FolderType.Boss:
                 return BossPortal;
-            case FolderNode.FolderType.Shop:
+            case FolderType.Shop:
                 return ShopPortal;
-            case FolderNode.FolderType.Download:
+            case FolderType.Download:
                 return DownloadPortal;
-            case FolderNode.FolderType.RandomSpecial:
+            case FolderType.RandomSpecial:
                 string name = node.name;
                 if (name == "Charge_room(Clone)")
                     return Charge_room;
@@ -398,11 +400,11 @@ public class FolderGenerator : MonoBehaviour
         public int? ParentId { get; set; }        // 부모 ID (루트 노드는 null)
         public int ChildCount { get; set; }       // 자식 개수
         public List<int> Children { get; set; }   // 자식 노드 ID 목록
-        public FolderNode.FolderType Type { get; set; } // 노드 타입
+        public FolderType Type { get; set; } // 노드 타입
         public bool IsLeaf { get; set; }          // 리프 노드 여부
         public int Depth { get; set; }            // 트리 깊이
 
-        public TreeNodeData(int id, int? parentId, FolderNode.FolderType type, int depth)
+        public TreeNodeData(int id, int? parentId, FolderType type, int depth)
         {
             Id = id;
             ParentId = parentId;
@@ -423,7 +425,7 @@ public class FolderGenerator : MonoBehaviour
         int leafCount = 0;
 
         // 1. 루트 노드 생성 및 초기화
-        var root = new TreeNodeData(nextId++, null, FolderNode.FolderType.Start, 0);
+        var root = new TreeNodeData(nextId++, null, FolderType.Start, 0);
         nodes.Add(root);
         // Debug.Log($"Root Node Created - ID: {root.Id}, ChildCount: {root.ChildCount}");
 
@@ -454,7 +456,7 @@ public class FolderGenerator : MonoBehaviour
                 if (parent.ChildCount >= 3) break; // 자식이 최대 개수를 초과하면 중단
 
                 // 자식 노드 생성
-                var child = new TreeNodeData(nextId++, parent.Id, FolderNode.FolderType.Middle, parent.Depth + 1);
+                var child = new TreeNodeData(nextId++, parent.Id, FolderType.Middle, parent.Depth + 1);
                 parent.Children.Add(child.Id);
                 parent.ChildCount++;
                 parent.IsLeaf = false; // 부모가 되었으므로 리프 노드가 아님
@@ -477,7 +479,7 @@ public class FolderGenerator : MonoBehaviour
             {
                 foreach (var parentNode in validParents)
                 {
-                    var extraLeaf = new TreeNodeData(nextId++, parentNode.Id, FolderNode.FolderType.Hidden, parentNode.Depth + 1);
+                    var extraLeaf = new TreeNodeData(nextId++, parentNode.Id, FolderType.Hidden, parentNode.Depth + 1);
                     parentNode.Children.Add(extraLeaf.Id);
                     parentNode.ChildCount++;
                     nodes.Add(extraLeaf);
@@ -500,7 +502,7 @@ public class FolderGenerator : MonoBehaviour
             if (node.Children.Count == 0 && node.ParentId != null) // 리프 노드
             {
                 leafNodes.Add(node);
-                node.Type = FolderNode.FolderType.End;
+                node.Type = FolderType.End;
 
                 // 가장 깊은 리프 노드 찾기
                 if (node.Depth > maxDepth)
@@ -511,14 +513,14 @@ public class FolderGenerator : MonoBehaviour
             }
             else if (node.ParentId != null) // 중간 노드
             {
-                node.Type = FolderNode.FolderType.Middle;
+                node.Type = FolderType.Middle;
             }
         }
 
         // 4. 가장 깊은 리프 노드 타입을 Boss로 설정
         if (bossNode != null)
         {
-            bossNode.Type = FolderNode.FolderType.Boss;
+            bossNode.Type = FolderType.Boss;
             leafNodes.Remove(bossNode);
             // Debug.Log($"Boss Node Assigned - ID: {bossNode.Id}, Depth: {bossNode.Depth}");
         }
@@ -528,13 +530,13 @@ public class FolderGenerator : MonoBehaviour
         {
             // 다운로드 1개
             var downloadNode = leafNodes[random.Next(leafNodes.Count)];
-            downloadNode.Type = FolderNode.FolderType.Download;
+            downloadNode.Type = FolderType.Download;
             leafNodes.Remove(downloadNode);
             // Debug.Log($"Download Node Assigned - ID: {downloadNode.Id}");
 
             // 상점 1개
             var storeNode = leafNodes[random.Next(leafNodes.Count)];
-            storeNode.Type = FolderNode.FolderType.Shop;
+            storeNode.Type = FolderType.Shop;
             leafNodes.Remove(storeNode);
             // Debug.Log($"Store Node Assigned - ID: {storeNode.Id}");
 
@@ -542,7 +544,7 @@ public class FolderGenerator : MonoBehaviour
             for (int i = 0; i < 2; i++)
             {
                 var specialNode = leafNodes[random.Next(leafNodes.Count)];
-                specialNode.Type = FolderNode.FolderType.RandomSpecial;
+                specialNode.Type = FolderType.RandomSpecial;
                 leafNodes.Remove(specialNode);
                 // Debug.Log($"Special Node Assigned - ID: {specialNode.Id}");
             }

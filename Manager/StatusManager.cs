@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class StatusManager : MonoBehaviour
@@ -57,7 +56,7 @@ public class StatusManager : MonoBehaviour
     public float Elect;
     public bool HPisFull = false;
 
-    public MonsterBase.MonsterType DeathSign; // »ç¸Á¿øÀÎ
+    public MonsterType DeathSign; // »ç¸Á¿øÀÎ
     public float HealCoolTime;
 
     private Coroutine healing_coroutine;
@@ -146,7 +145,7 @@ public class StatusManager : MonoBehaviour
 
     #region Damage Logic
 
-    public void TakeDamage(float damage, MonsterBase.MonsterType deathSign)
+    public void TakeDamage(float damage, MonsterType deathSign)
     {
         if (!IsHit)
         {

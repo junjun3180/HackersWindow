@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -92,7 +91,6 @@ public class UI_4_LocalDisk : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         folderManager = FolderManager.Instance;
@@ -104,7 +102,7 @@ public class UI_4_LocalDisk : MonoBehaviour
 
     public void OpenUI()
     {
-        Debug.Log("OpenUI");
+        // Debug.Log("OpenUI");
         if (UI_W_LocalDisk != null)
         {
             UI_W_LocalDisk.SetActive(true);
@@ -188,16 +186,16 @@ public class UI_4_LocalDisk : MonoBehaviour
                 // 노드 타입에 따라 프리팹 설정
                 switch (node.Type)
                 {
-                    case FolderNode.FolderType.Download:
+                    case FolderType.Download:
                         newNodeUI = Instantiate(DownloadPrefab, content);
                         break;
-                    case FolderNode.FolderType.Shop:
+                    case FolderType.Shop:
                         newNodeUI = Instantiate(ShopPrefab, content);
                         break;
-                    case FolderNode.FolderType.Boss:
+                    case FolderType.Boss:
                         newNodeUI = Instantiate(BossPrefab, content);
                         break;
-                    case FolderNode.FolderType.RandomSpecial:
+                    case FolderType.RandomSpecial:
                         string name = node.CurrentFolder.name;
                         if (name == "Charge_room(Clone)")
                             newNodeUI = Instantiate(ChargeRoomPrefab, content);
@@ -326,14 +324,14 @@ public class UI_4_LocalDisk : MonoBehaviour
             // 발견 O + 클리어 X : 색상을 어둡게 처리
             else if (node.isDetectionDone == true && node.IsCleared == false)
             {
-                Debug.Log("발견 O + 클리어 X");
+                // Debug.Log("발견 O + 클리어 X");
                 nodeGameObject.SetActive(true);
                 imageComponent.color = new Color(0.45f, 0.45f, 0.45f, 1.0f);
             }
             // 발견 O + 클리어 O : 색상 원복, 선 활성화
             else if (node.isDetectionDone == true && node.IsCleared == true)
             {
-                Debug.Log("발견 O + 클리어 O");
+                // Debug.Log("발견 O + 클리어 O");
                 nodeGameObject.SetActive(true);
                 imageComponent.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
                 if (linesMap.ContainsKey(nodeID))
@@ -411,26 +409,26 @@ public class UI_4_LocalDisk : MonoBehaviour
         // adressList.Clear();
     }
 
-    public void SetUIAdress(UIManager.UI uiType)
+    public void SetUIAdress(UI uiType)
     {
         switch (uiType)
         {
-            case UIManager.UI.UI_MyPC:
+            case UI.UI_MyPC:
                 Address.text = "내 PC";
                 break;
-            case UIManager.UI.UI_DownLoad:
+            case UI.UI_DownLoad:
                 Address.text = "다운로드";
                 break;
-            case UIManager.UI.UI_MyDocument:
+            case UI.UI_MyDocument:
                 Address.text = "내 문서";
                 break;
-            case UIManager.UI.UI_LocalDisk:
+            case UI.UI_LocalDisk:
                 Address.text = "로컬 디스크";
                 break;
-            case UIManager.UI.UI_Control:
+            case UI.UI_Control:
                 Address.text = "제어판";
                 break;
-            case UIManager.UI.UI_Help:
+            case UI.UI_Help:
                 Address.text = "도움말";
                 break;
         }

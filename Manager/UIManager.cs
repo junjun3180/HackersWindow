@@ -1,9 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Progress;
 
 public class UIManager : MonoBehaviour
 {
@@ -50,11 +49,6 @@ public class UIManager : MonoBehaviour
 
     #region UI Instance Element
 
-    public enum UI
-    {
-        UI_MyPC, UI_DownLoad, UI_MyDocument, UI_LocalDisk, UI_NetWork, UI_Control, UI_Help
-    }
-
     private UI LastOpenUINum = UI.UI_MyPC;
     private UI_0_HUD ui_0_HUD = null;
     private UI_1_MyPC ui_1_MyPC = null;
@@ -65,6 +59,12 @@ public class UIManager : MonoBehaviour
     private UI_6_Control ui_6_Control = null;
     private UI_7_Help ui_7_Help = null;
     private UI_8_ProgramInstall ui_8_ProgramInstall = null;
+
+    #endregion
+
+    #region Variable Element
+
+    private Dictionary<KeyCode, Action> inputActions;
 
     #endregion
 
@@ -130,13 +130,43 @@ public class UIManager : MonoBehaviour
         ui_6_Control = UI_6_Control.Instance;
         ui_7_Help = UI_7_Help.Instance;
         ui_8_ProgramInstall = UI_8_ProgramInstall.Instance;
+
+        inputActions = new Dictionary<KeyCode, Action>
+        {
+            { KeyCode.Escape, WindowUISetActive },
+            { KeyCode.Tab, LocalDiskUI },
+            { KeyCode.E, DocumentUI }
+        };
     }
 
     void Update()
     {
-        if (!ui_8_ProgramInstall.isESCDisabled && folderManager.CurrentFolder.IsCleared && Input.GetKeyDown(KeyCode.Escape))
+        // Legacy code
+        /* 
+        if (!ui_8_ProgramInstall.isESCDisabled && folderManager.CurrentFolder.IsCleared)
         {
-            WindowUISetActive();
+            if (Input.GetKeyDown(KeyCode.Escape))
+                WindowUISetActive();
+            if (Input.GetKeyDown(KeyCode.Tab))
+                FLocalDisk_Button();
+            if (Input.GetKeyDown(KeyCode.E))
+                FMy_Documents_Button();
+        }
+        */
+
+        if (ui_8_ProgramInstall == null || folderManager == null) return;
+
+        // Check if ESC is not disabled and the current folder is cleared
+        if (!ui_8_ProgramInstall.isESCDisabled && folderManager.CurrentFolder.IsCleared)
+        {
+            // Process key inputs dynamically
+            foreach (var entry in inputActions)
+            {
+                if (Input.GetKeyDown(entry.Key))
+                {
+                    entry.Value?.Invoke();
+                }
+            }
         }
     }
 
@@ -196,7 +226,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void WindowUISetActive()
+    public void WindowUISetActive()
     {
         if (WindowUI != null)
         {
@@ -222,6 +252,24 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Tab Key
+    private void LocalDiskUI()
+    {
+        if((WindowUI.activeSelf && LastOpenUINum == UI.UI_LocalDisk) || (!WindowUI.activeSelf))
+            WindowUISetActive();
+        
+        FLocalDisk_Button();
+    }
+
+    // E Key
+    private void DocumentUI()
+    {
+        if ((WindowUI.activeSelf && LastOpenUINum == UI.UI_MyDocument) || (!WindowUI.activeSelf))
+            WindowUISetActive();
+
+        FMy_Documents_Button();
+    }
+
     #endregion
 
     #region Start, End, GameOver UI
@@ -242,7 +290,7 @@ public class UIManager : MonoBehaviour
         int seconds = Mathf.FloorToInt(playTime % 60);
         PlayTimeText.text = string.Format("{0:00}:{1:00}:{2:00}", hours, minutes, seconds);
 
-        MonsterBase.MonsterType monsterType = statusManager.DeathSign;
+        MonsterType monsterType = statusManager.DeathSign;
         if (MonsterBase.MonsterNameDict.TryGetValue(monsterType, out string monsterName))
         {
             DeathSign.text = monsterName + "ÇÑÅ× Á×À½.";

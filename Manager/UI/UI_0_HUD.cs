@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -345,7 +343,7 @@ public class UI_0_HUD : MonoBehaviour
         int remainingShields = (int)statusManager.ShieldHp; // 활성화할 쉴드 개수
         int currentHp = (int)statusManager.CurrentHp;       // 현재 HP
 
-        int ActiveShield = currentHp / 3 - 1;
+        int ActiveShield = currentHp / 3 - 1 + (currentHp % 3 != 0 ? 1 : 0);
         // ActiveShield = ActiveShield >= 
         // 오른쪽부터 쉴드 적용
         for (int i = ActiveShield; i >= 0 && remainingShields > 0; i--)
@@ -353,11 +351,13 @@ public class UI_0_HUD : MonoBehaviour
             if (hpList[i].name == "R_Heart(Clone)")
             {
                 Transform segments = hpList[i].transform;
-                if (hpList[i].transform.childCount > 0)
+                if (!hpList[i].transform.GetChild(0).gameObject.activeSelf)
                 {
                     hpList[i].transform.GetChild(0).gameObject.SetActive(true);
                     remainingShields--;
                 }
+                else
+                    continue;
             }
         }
     }

@@ -1,20 +1,10 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 public class Item : MonoBehaviour
 {
     #region Definition
-    public enum ItemType
-    {
-        Coin1, Coin5, Coin10, Coin15, Coin100, Key, CardPack, ForcedDeletion, ProgramRemove, ProgramRecycle
-        , Heal, TemHp, Shiled, Spark, HPFull
-        , Card_Clover, Card_Spade, Card_Hearth, Card_Dia
-        , Ticket_Random, Ticket_Down, Ticket_Shop, Ticket_Special, Ticket_BlackShop,Ticket_Boss
-        , ExpansionKit_1, ExpansionKit_2, ExpansionKit_3
-    }
-
+    
     public int itemScore;
     private GameManager gameManager;
     private StatusManager statusManager;
@@ -136,14 +126,8 @@ public class Item : MonoBehaviour
                 CoinItem();
                 break;
             case ItemType.Key:
-                KeyItem();
-                break;
             case ItemType.ExpansionKit_1:
-                AddItem();
-                break;
             case ItemType.ExpansionKit_2:
-                AddItem();
-                break;
             case ItemType.ExpansionKit_3:
                 AddItem();
                 break;
@@ -160,32 +144,14 @@ public class Item : MonoBehaviour
                 AddItem();
                 break;
             case ItemType.Card_Clover:
-                AddItem();
-                break;
             case ItemType.Card_Dia:
-                AddItem();
-                break;
             case ItemType.Card_Spade:
-                AddItem();
-                break;
             case ItemType.Card_Hearth:
-                AddItem();
-                break;
             case ItemType.Ticket_BlackShop:
-                AddItem();
-                break;
             case ItemType.Ticket_Down:
-                AddItem();
-                break;
             case ItemType.Ticket_Shop:
-                AddItem();
-                break;
             case ItemType.Ticket_Random:
-                AddItem();
-                break;
             case ItemType.Ticket_Special:
-                AddItem();
-                break;
             case ItemType.Ticket_Boss:
                 AddItem();
                 break;
@@ -251,15 +217,9 @@ public class Item : MonoBehaviour
         }
     }
 
-    private void KeyItem()
-    {
-        AddItem();
-    }
-
     private void CardPackItem()
     {
         AddItem();
-        Debug.Log("카드팩 기능 구현 안되어 있음");
     }
 
     private void ForcedDeletionItem()
@@ -279,7 +239,6 @@ public class Item : MonoBehaviour
         Debug.Log("프로그램 재활용 기능 구현 안되어 있음");
     }
 
-    // HP회복 아이템
     private void HealItem()
     {
         if(statusManager != null)
@@ -289,7 +248,6 @@ public class Item : MonoBehaviour
         }
     }
 
-    // 임시 체력 회복 아이템
     private void TemHpItem()
     {
         if (statusManager != null)
@@ -299,7 +257,6 @@ public class Item : MonoBehaviour
         }
     }
 
-    // 쉴드 아이템
     private void ShiledItem()
     {
         if (statusManager != null)
@@ -309,7 +266,6 @@ public class Item : MonoBehaviour
         }
     }
 
-    // 번개 아이템
     private void SparkItem()
     {
         if (statusManager != null)
@@ -319,7 +275,6 @@ public class Item : MonoBehaviour
         }
     }
 
-    // HPFull 아이템
     private void HPFullItem()
     {
         if (statusManager != null)

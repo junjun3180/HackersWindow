@@ -4,19 +4,37 @@ using UnityEngine;
 
 public class MonsterBase : MonoBehaviour
 {
-    public enum MonsterType
-    {
-        M_V1,
-        M_V2,
-        M_V3,
-        M_CardPack,
-        M_VE_1,
-        M_VE_2,
-        M_SpiderCardPack,
-        Red_Spider,
-        White_Spider,
-        Boss_Mouse
-    }
+    #region Manager
+
+    protected GameManager GameManager;
+    protected StatusManager statusManager;
+    protected FolderManager folderManager;
+
+    #endregion
+
+    #region Monster Base Info
+
+    public MonsterType monsterType;
+    public float MoveSpeed;
+    public float AttackPower;
+    public float HP;
+    protected float BaseHP;
+    public float DefenseRate; // 방어력 계수
+    public float DetectingAreaR;
+    protected bool isMoving = true;
+    private bool isDead = false; // 사망 상태 플래그
+
+    #endregion
+
+    #region Target Info
+
+    protected Transform player; // Target Player
+    protected Vector3 TargetPosition; // Saved Target Position
+    protected bool DetectionSuccess = false;
+
+    #endregion
+
+    #region Variable Element
 
     public static Dictionary<MonsterType, string> MonsterNameDict = new Dictionary<MonsterType, string>
     {
@@ -32,31 +50,14 @@ public class MonsterBase : MonoBehaviour
         { MonsterType.Boss_Mouse, "Boss_Mouse는 보스" }
     };
 
-    // Monster Base Info
-    public MonsterType monsterType;
-    public float MoveSpeed;
-    public float AttackPower;
-    public float HP;
-    protected float BaseHP;
-    public float DefenseRate; // 방어력 계수
-    public float DetectingAreaR;
-    protected bool isMoving = true;
-    private bool isDead = false; // 사망 상태 플래그
-
-    // Target Info
-    protected Transform player; // 플레이어의 위치
-    protected Vector3 TargetPosition; // 탐지된 플레이어의 위치 저장
-    protected bool DetectionSuccess = false; // 탐지 성공 여부
-
-    protected GameManager GameManager;
-    protected StatusManager statusManager;
     protected SpriteRenderer SpriteRenderer;
     protected Animator MAnimator;
     protected Rigidbody2D rb;
 
-    protected FolderManager folderManager;
+    #endregion
 
-    // Start is called before the first frame update
+    #region Default Function
+
     protected virtual void Start()
     {
         GameManager = GameManager.Instance;
@@ -67,6 +68,11 @@ public class MonsterBase : MonoBehaviour
         folderManager = FolderManager.Instance;
         DefenseRate = 1.0f;
     }
+
+    #endregion
+
+    #region Interface Function. If you inherit this script, you must override these functions.
+
     public virtual IEnumerator MonsterRoutine()
     {
         Debug.Log("\"MonsterRoutine \"함수를 재정의하지 않음.");
@@ -97,7 +103,10 @@ public class MonsterBase : MonoBehaviour
         return new Vector3(x, y, 0);
     }
 
-    // Sprite Flip Setting
+    #endregion
+
+    #region Sprite Flip Setting
+
     protected void SpriteFlipSetting()
     {
         // 방향 설정
@@ -111,9 +120,10 @@ public class MonsterBase : MonoBehaviour
         }
     }
 
-    /*
-     * Collision Handling Section
-     */
+    #endregion
+
+    #region Collision Handling Section
+
     // Player Collision
     public void OnTriggerEnter2D(Collider2D collision)
     {
@@ -148,6 +158,10 @@ public class MonsterBase : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Damage
+
     public virtual void Damaged(float damage)
     {
         // Debug.Log("Damaged");
@@ -157,14 +171,18 @@ public class MonsterBase : MonoBehaviour
 
     protected virtual void Die()
     {
-        // 이미 죽은 상태라면 실행하지 않음
+        // Do not run if you are already dead
         if (isDead) return;
 
-        isDead = true; // 사망 상태로 설정
+        isDead = true;
 
         folderManager.UpdateMonsterCount(-1);
         Destroy(this.gameObject);
     }
+
+    #endregion
+
+    #region PlayerDetection
 
     public bool DetectionPlayerPosition()
     {
@@ -184,6 +202,8 @@ public class MonsterBase : MonoBehaviour
 
         return false;
     }
+
+    #endregion
 
     // ========== 탐색범위 표시용 ==========
     // 탐지 범위를 시각적으로 표시 (에디터 전용)

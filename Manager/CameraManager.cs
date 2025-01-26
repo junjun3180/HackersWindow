@@ -1,19 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 
 public class CameraManager : MonoBehaviour
 {
+    #region Manager
+
     public static CameraManager Instance; // 싱글톤 인스턴스
+    private FolderManager folderManager;
+
+    #endregion
+
+    #region Definition
 
     public CinemachineVirtualCamera primaryCamera;
     [SerializeField] private CinemachineVirtualCamera currentCamera;
     [SerializeField] private CinemachineConfiner2D confiner2D;
     [SerializeField] private Player playerController;
 
-    private FolderManager folderManager;
-
+    #endregion
 
     #region Lagacy Code
     /*
@@ -66,6 +70,37 @@ public class CameraManager : MonoBehaviour
 
     #endregion
 
+    #region Camera Setting
+
+    public void SetCameraFromFolderNode()
+    {
+        
+        switch(folderManager.CurrentFolder.Type)
+        {
+            case FolderType.RandomSpecial:
+            case FolderType.Hidden:
+                switcherCamera(folderManager.CurrentFolder.mapCamera);
+                break;
+            default:
+                switchPrimaryCamera();
+                break;
+        }
+        
+        /*
+        if (folderManager.CurrentFolder.Type == FolderType.RandomSpecial)
+        {
+            // Special Setting Camera
+            switcherCamera(folderManager.CurrentFolder.mapCamera);
+        }
+        else
+        { 
+            // Normal Type Camera
+            switchPrimaryCamera();
+        }
+        */
+
+        SetCollider();
+    }
 
     public void switcherCamera(CinemachineVirtualCamera newCamera)
     {
@@ -73,6 +108,7 @@ public class CameraManager : MonoBehaviour
         newCamera.gameObject.SetActive(true);
         currentCamera = newCamera;
         currentCamera.Follow = playerController.transform;
+        confiner2D = newCamera.GetComponent<CinemachineConfiner2D>();
     }
 
     public void switchPrimaryCamera()
@@ -80,22 +116,24 @@ public class CameraManager : MonoBehaviour
         currentCamera.gameObject.SetActive(false );
         primaryCamera.gameObject.SetActive(true);
         currentCamera = primaryCamera;
+        confiner2D = primaryCamera.GetComponent<CinemachineConfiner2D>();
     }
 
     public void SetCollider()
     {
-        Collider2D curCollider = folderManager?.CurrentFolder.GetComponent<Collider2D>();
+        // Debug.Log("SetCollider");
+        PolygonCollider2D curCollider = folderManager?.CurrentFolder.GetComponent<PolygonCollider2D>();
 
         if (curCollider == null)
         {
-            Debug.LogWarning("CurrentFolder에 Collider2D가 없습니다.");
+            Debug.LogWarning("Current Folder does not have Collider2D.");
             return;
         }
 
         if (confiner2D != null)
         {
             confiner2D.m_BoundingShape2D = curCollider;
-            Debug.Log("Collider가 성공적으로 할당되었습니다.");
+            Debug.Log("Collider has been assigned successfully.");
         }
         else
         {
@@ -103,5 +141,6 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    #endregion
 }
 

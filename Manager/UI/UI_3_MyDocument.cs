@@ -1,14 +1,19 @@
-using Mono.Cecil.Cil;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UI_3_MyDocument : MonoBehaviour
 {
+    #region Manager
+
     private static UI_3_MyDocument instance = null;
+    private ItemManager itemManager = null;
+    private StatusManager statusManager = null;
+
+    #endregion
+
+    #region Variable Element
 
     // UI Window
     public GameObject UI_W_MyDocument = null;
@@ -27,7 +32,6 @@ public class UI_3_MyDocument : MonoBehaviour
     public GameObject UseButton;
     public GameObject UseButtonBlack;
 
-
     public Image i_StorageView;
     public Text t_StorageRate;
 
@@ -36,9 +40,9 @@ public class UI_3_MyDocument : MonoBehaviour
     // Current Selected Item;
     private Item currentItem = null;
 
-    // Manager
-    private ItemManager itemManager = null;
-    private StatusManager statusManager = null;
+    #endregion
+
+    #region Default Function
 
     public static UI_3_MyDocument Instance
     {
@@ -83,6 +87,10 @@ public class UI_3_MyDocument : MonoBehaviour
 
         RemoveItemDetail();
     }
+
+    #endregion
+
+    #region Open/Close UI
 
     public void OpenUI()
     {
@@ -152,7 +160,9 @@ public class UI_3_MyDocument : MonoBehaviour
         }
     }
 
-    public void SetItemImage(Image buttonImage, Item.ItemType itemType)
+    #endregion
+
+    public void SetItemImage(Image buttonImage, ItemType itemType)
     {
         Sprite[] sprites;
         Sprite itemSprite = null;
@@ -211,13 +221,15 @@ public class UI_3_MyDocument : MonoBehaviour
         UseButtonBlack.SetActive(false);
     }
 
+    #region OnClick Function
+
     private void FItemUse_Button()
     {
         if (itemManager != null)
         {
             itemManager.RemoveItem(currentItem);
-            UpdateStorage();
             itemManager.UseItem(currentItem);
+            UpdateStorage();
         }
 
         // 리스트 갱신
@@ -239,4 +251,6 @@ public class UI_3_MyDocument : MonoBehaviour
         // 디테일 창 삭제
         RemoveItemDetail();
     }
+
+    #endregion
 }

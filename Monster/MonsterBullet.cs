@@ -1,31 +1,36 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MonsterBullet : MonoBehaviour
 {
-    public float lifeTime = 5f;  // 총알이 파괴되기까지의 시간
-    public int damage = 10;      // 총알의 공격력
-    public MonsterBase.MonsterType monstertype;
+    #region Variable Element
 
-    //한번의 충돌로 두번 효과 발생하는거 방지용
-    private bool hasHit = false;
+    public float lifeTime = 5f;
+    public int damage = 10;      
+    public MonsterType monstertype;
+    private bool hasHit = false; // First Hit Flag
 
-    // Start is called before the first frame update
+    #endregion
+
+    #region Defualt Function
+
     void Start()
     {
-        // 일정 시간이 지나면 총알 파괴
+        // Life Time Destroy
         Destroy(gameObject, lifeTime);
     }
 
-    // 충돌 처리
+    #endregion
+
+    #region Trigger Event
+
     void OnTriggerEnter2D(Collider2D hitInfo)
     {
         Player player = hitInfo.GetComponent<Player>();
 
         if (hitInfo.gameObject.CompareTag("Player"))
         {
-            if (hasHit) return; // 이미 충돌했으면 더 이상 처리하지 않음
+            if (hasHit) return;
+
             hasHit = true;
             StatusManager statusManager = StatusManager.Instance;
             if (statusManager != null)
@@ -36,4 +41,6 @@ public class MonsterBullet : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    #endregion
 }

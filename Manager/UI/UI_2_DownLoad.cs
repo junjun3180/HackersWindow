@@ -1,31 +1,13 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UI_2_DownLoad : MonoBehaviour
 {
+    #region Manager
+
     private static UI_2_DownLoad instance = null;
-
-    // UI Window
-    public GameObject UI_W_DownLoad = null;
-
-    // Detail
-    public GameObject Button_Program_Prefab;
-    public GameObject i_Program_Detail_Image_Prefab;
-    public Text t_Program_Detail_Name_Prefab;
-    public Text t_Program_Detail_Explanation_Prefab;
-    public Text t_Program_Detail_PowerExplanation_Prefab;
-
-    public Transform ContentProgramGroup;
-    public Button ProgramUseButton;
-    public Button ProgramDeleteButton;
-    private int CurrentProgram = -1;
-
-    // Manager
     private ProgramManager programManager;
+    private ItemManager itemManager;
 
     public static UI_2_DownLoad Instance
     {
@@ -46,6 +28,29 @@ public class UI_2_DownLoad : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Variable Element
+
+    // UI Window
+    public GameObject UI_W_DownLoad = null;
+
+    // Detail
+    public GameObject Button_Program_Prefab;
+    public GameObject i_Program_Detail_Image_Prefab;
+    public Text t_Program_Detail_Name_Prefab;
+    public Text t_Program_Detail_Explanation_Prefab;
+    public Text t_Program_Detail_PowerExplanation_Prefab;
+
+    public Transform ContentProgramGroup;
+    public Button ProgramUseButton;
+    public Button ProgramDeleteButton;
+    private int CurrentProgram = -1;
+
+    #endregion
+
+    #region Default Function
+
     private void Awake()
     {
         if (instance == null)
@@ -59,14 +64,18 @@ public class UI_2_DownLoad : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         programManager = ProgramManager.Instance;
+        itemManager = ItemManager.Instance;
 
         ProgramUseButton.onClick.AddListener(FUse_Button);
         ProgramDeleteButton.onClick.AddListener(FDelete_Button);
     }
+
+    #endregion
+
+    #region Open/Close UI
 
     public void OpenUI()
     {
@@ -119,11 +128,9 @@ public class UI_2_DownLoad : MonoBehaviour
             ProgramDeleteButton.gameObject.SetActive(false);
     }
 
-    void OnProgramClick(GameObject clickedButton)
-    {
-        int index = clickedButton.transform.GetSiblingIndex();
-        OpenProgramDetail(index);
-    }
+    #endregion
+
+    #region ProgramDetail Panel
 
     public void SetSpriteFromSheet(Image buttonImage, string spriteSheetName, int spriteIndex)
     {
@@ -198,10 +205,22 @@ public class UI_2_DownLoad : MonoBehaviour
         DeActivateButtonGroup();
     }
 
+    #endregion
+
+    #region OnClick Function
+
+    void OnProgramClick(GameObject clickedButton)
+    {
+        int index = clickedButton.transform.GetSiblingIndex();
+        OpenProgramDetail(index);
+    }
+
     public void FDelete_Button()
     {
-        Debug.Log("Á¦°Å");
-        RemoveProgram();
+        if (itemManager.ProgramDeletionUse())
+        {
+            RemoveProgram();
+        }
     }
 
     public void FUse_Button()
@@ -211,6 +230,10 @@ public class UI_2_DownLoad : MonoBehaviour
 
         RemoveProgram();
     }
+
+    #endregion
+
+    #region Program Remove
 
     private void RemoveProgram()
     {
@@ -247,4 +270,6 @@ public class UI_2_DownLoad : MonoBehaviour
         ProgramUseButton.gameObject.SetActive(false);
         ProgramDeleteButton.gameObject.SetActive(false);
     }
+
+    #endregion
 }

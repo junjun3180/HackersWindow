@@ -2,21 +2,29 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Progress;
-using static Item;
 
 public class ItemManager : MonoBehaviour
 {
+    #region Manager
+
     public static ItemManager Instance;
-
-    public SortedDictionary<string, List<Item>> itemList;
-
+    private FolderManager folderManager;
     private StatusManager statusManager;
     private UIManager uIManager;
     private UI_0_HUD ui_0_HUD;
+
+    #endregion
+
+    #region Variable Elment
+
+    // public 
+    public SortedDictionary<string, List<Item>> itemList;
+
+    // private
     private Player player;
-    private FolderManager folderManager;
-    Rigidbody2D rb;
+    private Rigidbody2D rb;
+
+    #endregion
 
     #region Item Prefab
 
@@ -50,21 +58,23 @@ public class ItemManager : MonoBehaviour
     public GameObject P_Shiled;
     public GameObject P_Spark;
 
-    #endregion
+    private GameObject SpawnObject = null;
+    private GameObject droppedItem = null;
 
-    GameObject SpawnObject = null;
-    GameObject droppedItem = null;
+    #endregion
 
     #region Sorting Item 
 
     // 아이템 이름
-    private string KeyName;
-    private string ForcedDeletionName;
     private string Coin1_Name;
     private string Coin5_Name;
     private string Coin10_Name;
     private string Coin15_Name;
     private string Coin100_Name;
+    private string KeyName;
+    private string ForcedDeletionName;
+    private string ProgramDeleteItemName;
+    private string ProgramRecycleName;
 
 
     // ItemType을 키로, 이미지 인덱스를 값으로 저장하는 Dictionary
@@ -137,6 +147,8 @@ public class ItemManager : MonoBehaviour
 
     #endregion
 
+    #region Default Function
+
     private void Awake()
     {
         if (Instance == null)
@@ -150,13 +162,15 @@ public class ItemManager : MonoBehaviour
         }
 
         // 이름 지정
-        KeyName = P_Key.GetComponent<Item>().ItemName;
-        ForcedDeletionName = P_ForcedDeletion.GetComponent<Item>().ItemName;
         Coin1_Name = P_Coin1.GetComponent<Item>().ItemName;
         Coin5_Name = P_Coin5.GetComponent<Item>().ItemName;
         Coin10_Name = P_Coin10.GetComponent<Item>().ItemName;
         Coin15_Name = P_Coin15.GetComponent<Item>().ItemName;
         Coin100_Name = P_Coin100.GetComponent<Item>().ItemName;
+        KeyName = P_Key.GetComponent<Item>().ItemName;
+        ForcedDeletionName = P_ForcedDeletion.GetComponent<Item>().ItemName;
+        ProgramDeleteItemName = P_ProgramRemove.GetComponent<Item>().ItemName;
+        ProgramRecycleName = P_ProgramRecycle.GetComponent<Item>().ItemName;
 
         if (itemList == null)
         {
@@ -172,6 +186,8 @@ public class ItemManager : MonoBehaviour
         player = GameManager.Instance.GetPlayer();
         folderManager = FolderManager.Instance;
     }
+
+    #endregion
 
     #region Item Add/Drop
 
@@ -250,37 +266,37 @@ public class ItemManager : MonoBehaviour
         StartCoroutine(StopAfterDelay(0.3f));
     }
 
-    private void DesignateGameObject(Item.ItemType itemType)
+    private void DesignateGameObject(ItemType itemType)
     {
         switch (itemType)
         {
-            case Item.ItemType.Coin1: SpawnObject = P_Coin1; break;
-            case Item.ItemType.Coin5: SpawnObject = P_Coin5; break;
-            case Item.ItemType.Coin10: SpawnObject = P_Coin10; break;
-            case Item.ItemType.Coin15: SpawnObject = P_Coin15; break;
-            case Item.ItemType.Coin100: SpawnObject = P_Coin100; break;
-            case Item.ItemType.Key: SpawnObject = P_Key; break;
-            case Item.ItemType.CardPack: SpawnObject = P_CardPack; break;
-            case Item.ItemType.ForcedDeletion: SpawnObject = P_ForcedDeletion; break;
-            case Item.ItemType.ProgramRemove: SpawnObject = P_ProgramRemove; break;
-            case Item.ItemType.ExpansionKit_1: SpawnObject = P_ExpansionKit_1; break;
-            case Item.ItemType.ExpansionKit_2: SpawnObject = P_ExpansionKit_2; break;
-            case Item.ItemType.ExpansionKit_3: SpawnObject = P_ExpansionKit_3; break;
-            case Item.ItemType.ProgramRecycle: SpawnObject = P_ProgramRecycle; break;
-            case Item.ItemType.Card_Clover: SpawnObject = P_Card_Clover; break;
-            case Item.ItemType.Card_Spade: SpawnObject = P_Card_Spade; break;
-            case Item.ItemType.Card_Hearth: SpawnObject = P_Card_Hearth; break;
-            case Item.ItemType.Card_Dia: SpawnObject = P_Card_Dia; break;
-            case Item.ItemType.Ticket_Random: SpawnObject = P_Ticket_Random; break;
-            case Item.ItemType.Ticket_Down: SpawnObject = P_Ticket_Down; break;
-            case Item.ItemType.Ticket_Shop: SpawnObject = P_Ticket_Shop; break;
-            case Item.ItemType.Ticket_Special: SpawnObject = P_Ticket_Special; break;
-            case Item.ItemType.Ticket_BlackShop: SpawnObject = P_Ticket_BlackShop; break;
-            case Item.ItemType.Ticket_Boss: SpawnObject = P_Ticket_Boss; break;
-            case Item.ItemType.Heal: SpawnObject = P_Heal; break;
-            case Item.ItemType.TemHp: SpawnObject = P_TemHp; break;
-            case Item.ItemType.Shiled: SpawnObject = P_Shiled; break;
-            case Item.ItemType.Spark: SpawnObject = P_Spark; break;
+            case ItemType.Coin1: SpawnObject = P_Coin1; break;
+            case ItemType.Coin5: SpawnObject = P_Coin5; break;
+            case ItemType.Coin10: SpawnObject = P_Coin10; break;
+            case ItemType.Coin15: SpawnObject = P_Coin15; break;
+            case ItemType.Coin100: SpawnObject = P_Coin100; break;
+            case ItemType.Key: SpawnObject = P_Key; break;
+            case ItemType.CardPack: SpawnObject = P_CardPack; break;
+            case ItemType.ForcedDeletion: SpawnObject = P_ForcedDeletion; break;
+            case ItemType.ProgramRemove: SpawnObject = P_ProgramRemove; break;
+            case ItemType.ExpansionKit_1: SpawnObject = P_ExpansionKit_1; break;
+            case ItemType.ExpansionKit_2: SpawnObject = P_ExpansionKit_2; break;
+            case ItemType.ExpansionKit_3: SpawnObject = P_ExpansionKit_3; break;
+            case ItemType.ProgramRecycle: SpawnObject = P_ProgramRecycle; break;
+            case ItemType.Card_Clover: SpawnObject = P_Card_Clover; break;
+            case ItemType.Card_Spade: SpawnObject = P_Card_Spade; break;
+            case ItemType.Card_Hearth: SpawnObject = P_Card_Hearth; break;
+            case ItemType.Card_Dia: SpawnObject = P_Card_Dia; break;
+            case ItemType.Ticket_Random: SpawnObject = P_Ticket_Random; break;
+            case ItemType.Ticket_Down: SpawnObject = P_Ticket_Down; break;
+            case ItemType.Ticket_Shop: SpawnObject = P_Ticket_Shop; break;
+            case ItemType.Ticket_Special: SpawnObject = P_Ticket_Special; break;
+            case ItemType.Ticket_BlackShop: SpawnObject = P_Ticket_BlackShop; break;
+            case ItemType.Ticket_Boss: SpawnObject = P_Ticket_Boss; break;
+            case ItemType.Heal: SpawnObject = P_Heal; break;
+            case ItemType.TemHp: SpawnObject = P_TemHp; break;
+            case ItemType.Shiled: SpawnObject = P_Shiled; break;
+            case ItemType.Spark: SpawnObject = P_Spark; break;
         }
     }
 
@@ -346,6 +362,39 @@ public class ItemManager : MonoBehaviour
 
     #region Item Use
 
+    private bool ConsumeItem(string itemName, bool updateHUD = false)
+    {
+        // Check if the item exists and has at least one instance
+        if (itemList.ContainsKey(itemName) && itemList[itemName].Count > 0)
+        {
+            // Retrieve and remove the first item
+            Item item = itemList[itemName][0];
+            statusManager.CurrentStorage -= item.ItemSize;
+            itemList[itemName].Remove(item);
+
+            // If the list is now empty, remove the key from the dictionary
+            if (itemList[itemName].Count == 0)
+            {
+                itemList.Remove(itemName);
+            }
+
+            // Optionally update the HUD
+            if (updateHUD)
+            {
+                ui_0_HUD.UpdateHUD();
+            }
+
+            Debug.Log($"{itemName} 아이템 사용됨");
+            return true; // Successful usage
+        }
+        else
+        {
+            Debug.Log($"{itemName} 아이템을 사용할 수 없습니다.");
+            return false; // Failed usage
+        }
+    }
+
+
     public void UseItem(Item item)
     {
         Debug.Log("UseItem");
@@ -367,6 +416,32 @@ public class ItemManager : MonoBehaviour
             case ItemType.Ticket_BlackShop:
                 folderManager.MoveHiddenFolder("Black");
                 break;
+            case ItemType.ExpansionKit_1:
+            case ItemType.ExpansionKit_2:
+            case ItemType.ExpansionKit_3:
+                statusManager.MaxStorageUp(item.itemScore);
+                break;
+
+            case ItemType.Ticket_Down:
+                folderManager.MoveToFolderByType(FolderType.Download);
+                break;
+            case ItemType.Ticket_Shop:
+                folderManager.MoveToFolderByType(FolderType.Shop);
+                break;
+            case ItemType.Ticket_Special:
+                folderManager.MoveToFolderByType(FolderType.RandomSpecial);
+                break;
+
+            case ItemType.Ticket_Boss:
+                folderManager.MoveToSpecificFolder("Boss.1P.S.Eror404Not");
+                UIManager.Instance.WindowUISetActive();
+                break;
+
+            case ItemType.ProgramRecycle:
+                Debug.Log("ProgramRecycle");
+                ProgramRecycleUse();
+                break;
+
             default:
                 Debug.Log("아직 정의되지 않은 아이템 사용 효과");
                 break;
@@ -401,29 +476,28 @@ public class ItemManager : MonoBehaviour
 
     public bool ForcedDeletionUse()
     {
-        // 아이템이 itemList에 있고, 해당 리스트에 아이템이 하나 이상 있는지 확인
-        if (itemList.ContainsKey(ForcedDeletionName) && itemList[ForcedDeletionName].Count > 0)
-        {
-            Item ForcedItem = itemList[ForcedDeletionName][0]; // 첫 번째 아이템 가져오기
-            statusManager.CurrentStorage -= ForcedItem.ItemSize; // 사용 후 저장소 용량 줄이기
-            itemList[ForcedDeletionName].Remove(ForcedItem); // 사용한 아이템 제거
-
-            // 해당 아이템이 더 이상 없으면 리스트에서 아이템 자체를 삭제
-            if (itemList[ForcedDeletionName].Count == 0)
-            {
-                itemList.Remove(ForcedDeletionName);
-            }
-
-            ui_0_HUD.UpdateHUD(); // HUD 업데이트
-            Debug.Log("강제삭제 아이템 사용됨");
-            return true;  // 사용 성공
-        }
-        else
-        {
-            Debug.Log("사용할 수 있는 강제삭제 아이템이 없습니다.");
-            return false;  // 사용 실패
-        }
+        return ConsumeItem(ForcedDeletionName, updateHUD: true);
     }
+
+    public bool ProgramDeletionUse()
+    {
+        return ConsumeItem(ProgramDeleteItemName);
+    }
+
+    public void ProgramRecycleUse()
+    {
+        // Check if the current folder is a download folder
+        if (folderManager.CurrentFolder.Type != FolderType.Download)
+            return;
+
+        ProgramRoom programRoom;
+        programRoom = FindObjectOfType<ProgramRoom>();
+        if(programRoom == null) return;
+        
+        programRoom.ChangeDownloadRoomProgram();
+    }
+
+
 
     public void UseCardPack()
     {
@@ -450,37 +524,37 @@ public class ItemManager : MonoBehaviour
         string spriteSheetName = "";
         switch (itemType)
         {
-            case Item.ItemType.Coin1:
-            case Item.ItemType.Coin5:
-            case Item.ItemType.Coin10:
-            case Item.ItemType.Coin15:
+            case ItemType.Coin1:
+            case ItemType.Coin5:
+            case ItemType.Coin10:
+            case ItemType.Coin15:
                 spriteSheetName = "Item/use_Coin";
                 break;
-            case Item.ItemType.Coin100:
-            case Item.ItemType.Key:
-            case Item.ItemType.CardPack:
-            case Item.ItemType.ForcedDeletion:
-            case Item.ItemType.ProgramRemove:
-            case Item.ItemType.ExpansionKit_1:
-            case Item.ItemType.ExpansionKit_2:
-            case Item.ItemType.ExpansionKit_3:
-            case Item.ItemType.ProgramRecycle:
-            case Item.ItemType.Card_Clover:
-            case Item.ItemType.Card_Spade:
-            case Item.ItemType.Card_Hearth:
-            case Item.ItemType.Card_Dia:
-            case Item.ItemType.Ticket_Random:
-            case Item.ItemType.Ticket_Down:
-            case Item.ItemType.Ticket_Shop:
-            case Item.ItemType.Ticket_Special:
-            case Item.ItemType.Ticket_BlackShop:
-            case Item.ItemType.Ticket_Boss:
+            case ItemType.Coin100:
+            case ItemType.Key:
+            case ItemType.CardPack:
+            case ItemType.ForcedDeletion:
+            case ItemType.ProgramRemove:
+            case ItemType.ExpansionKit_1:
+            case ItemType.ExpansionKit_2:
+            case ItemType.ExpansionKit_3:
+            case ItemType.ProgramRecycle:
+            case ItemType.Card_Clover:
+            case ItemType.Card_Spade:
+            case ItemType.Card_Hearth:
+            case ItemType.Card_Dia:
+            case ItemType.Ticket_Random:
+            case ItemType.Ticket_Down:
+            case ItemType.Ticket_Shop:
+            case ItemType.Ticket_Special:
+            case ItemType.Ticket_BlackShop:
+            case ItemType.Ticket_Boss:
                 spriteSheetName = "Item/use_DropItem";
                 break;
-            case Item.ItemType.Heal:
-            case Item.ItemType.TemHp:
-            case Item.ItemType.Shiled:
-            case Item.ItemType.Spark:
+            case ItemType.Heal:
+            case ItemType.TemHp:
+            case ItemType.Shiled:
+            case ItemType.Spark:
                 spriteSheetName = "Sprites/Items/Heal";
                 break;
 

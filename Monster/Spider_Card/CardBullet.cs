@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class CardBullet : MonoBehaviour
 {
+    #region Variable Element
+
     public float rotationSpeed = 1000000f;  // 회전 속도
     public float BulletPower = 1;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+
+    #endregion
+
+    #region Default Function
 
     // Update is called once per frame
     void Update()
@@ -18,12 +19,18 @@ public class CardBullet : MonoBehaviour
         transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
     }
 
+    #endregion
+
+    #region Trigger Event
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
-            StatusManager.Instance.TakeDamage(BulletPower, MonsterBase.MonsterType.M_CardPack);
+            StatusManager.Instance.TakeDamage(BulletPower, MonsterType.M_CardPack);
             gameObject.SetActive(false); // 파괴
         }
     }
+
+    #endregion
 }
